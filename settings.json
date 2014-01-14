@@ -1,0 +1,6 @@
+{
+	"modules": [ "a", "b", "c"],
+	"endpoints": {
+		"local": "http://dbpedia.org/sparql"
+	}
+}
