@@ -9,3 +9,18 @@ Make LOD applications easy
 # BEWARE!
 
 Currently there is no, I repeat, NO stable/usable version. Hopefully this will change soon.
+
+
+# TODO
+
+- [X] Support for modules
+- [ ] Use of templates
+- [X] Support mirroring
+- [ ] Multiple mirroring
+- [ ] Cache
+- [ ] Equivalent of Type module
+- [ ] Equivalent of Service module
+- [ ] Content negotiation
+- [ ] SPARQL transformation
+- [ ] Multiple namespaces
+- [ ] Visualization filters
