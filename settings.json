@@ -1,5 +1,10 @@
 {
-	"modules": [ "a", "b", "c"],
+	"modules": [ "Types"],
+	"ns": {
+		"local": "http://localhost:5000/",
+		"origin": "http://dbpedia.org/resource/"
+	},
+	"mirrored": true,
 	"endpoints": {
 		"local": "http://dbpedia.org/sparql"
 	}

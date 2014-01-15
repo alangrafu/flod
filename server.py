@@ -18,18 +18,32 @@ except Exception, e:
 
 #Load modules
 modules = []
-for m in settings['modules']:
-	try:
-		modules.append( __import__(m))
-	except Exception, e:
-		printerr("ERROR: Can't find module \"%s\". Aborting." % m)
-		exit(2)
+
+for mod in settings['modules']:
+    try:
+        m = reload(__import__(mod))
+    except ImportError:
+        print "bargh! import error!"
+        continue
+    try:
+        c = getattr(m,mod)
+        modules.append(c(settings))
+    except AttributeError:
+        printerr("No operations!")
 
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
-    return 'You want path: %s' % path
+	uri = "%s%s" % (settings['ns']['local'], path)
+	if settings['mirrored'] == True:
+		uri = "%s%s" % (settings['ns']['origin'], path)
+	content = ""
+	for module in modules:
+		if module.test(uri) == True:
+			content = module.execute(uri)
+			break
+	return content
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
