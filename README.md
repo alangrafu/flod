@@ -6,4 +6,6 @@ It is a framework for creating applications based on Linked Data. Based on all t
 
 Make LOD applications easy
 
+# BEWARE!
 
+Currently there is no, I repeat, NO stable/usable version. Hopefully this will change soon.
