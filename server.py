@@ -23,8 +23,8 @@ for mod in settings['modules']:
     try:
         m = reload(__import__(mod))
     except ImportError:
-        print "bargh! import error!"
-        continue
+        printerr("Can't import module '%s'. Aborting." % mod)
+        exit(2)
     try:
         c = getattr(m,mod)
         modules.append(c(settings))
@@ -40,10 +40,13 @@ def catch_all(path):
 		uri = "%s%s" % (settings['ns']['origin'], path)
 	content = ""
 	for module in modules:
-		if module.test(uri) == True:
+		response = module.test(uri)
+		if response['accepted'] == True:
 			content = module.execute(uri)
+			return content
 			break
-	return content
+	return 'Resource not found', 404
+	
 
 if __name__ == "__main__":
     app.run(host=settings['host'], port=settings['port'])

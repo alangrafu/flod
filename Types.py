@@ -3,14 +3,32 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 
 class Types:
 	config = {}
+	sparql = None
+
 	def __init__(self, config):
 		self.config = config
+		self.sparql = SPARQLWrapper(self.config['endpoints']['local'])
 
 	def operations(self):
 		print "hola Types"
 
 	def test(self, uri):
-		return True
+		self.sparql.setQuery("""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?p ?o
+    WHERE { 
+    {<%s> ?p ?o} 
+    UNION
+    {?s <%s> ?o} 
+    UNION
+    {?s ?p <%s>} 
+    }
+LIMIT 100""" % (uri, uri, uri))
+		self.sparql.setReturnFormat(JSON)
+		results = self.sparql.query().convert()
+		if len(results["results"]["bindings"]) > 0:
+			return {"accepted": True}
+		return {"accepted": False}
 
 	def execute(self, uri):
 		r = """<!DOCTYPE html>
@@ -37,14 +55,13 @@ class Types:
 				 			</thead>
 				 			<tbody>
 """%uri
-		sparql = SPARQLWrapper(self.config['endpoints']['local'])
-		sparql.setQuery("""
+		self.sparql.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?p ?o
     WHERE { <%s> ?p ?o }
 LIMIT 100""" % uri)
-		sparql.setReturnFormat(JSON)
-		results = sparql.query().convert()
+		self.sparql.setReturnFormat(JSON)
+		results = self.sparql.query().convert()
 
 		for result in results["results"]["bindings"]:
 			r += """				 				<tr>

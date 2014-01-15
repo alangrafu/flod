@@ -24,3 +24,4 @@ Currently there is no, I repeat, NO stable/usable version. Hopefully this will c
 - [ ] SPARQL transformation
 - [ ] Multiple namespaces
 - [ ] Visualization filters
+- [X] 404 when no data is available component
