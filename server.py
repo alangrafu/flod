@@ -46,4 +46,4 @@ def catch_all(path):
 	return content
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host=settings['host'], port=settings['port'])
