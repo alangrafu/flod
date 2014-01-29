@@ -1,7 +1,7 @@
 {
 	"modules": [ "Types"],
 	"ns": {
-		"local": "http://localhost:5000/",
+		"local": "http://localhost:5001/",
 		"origin": "http://dbpedia.org/resource/"
 	},
 	"mirrored": true,

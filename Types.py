@@ -23,11 +23,14 @@ class Types:
     UNION
     {?s ?p <%s>} 
     }
-LIMIT 100""" % (uri, uri, uri))
+LIMIT 1""" % (uri, uri, uri))
 		self.sparql.setReturnFormat(JSON)
 		results = self.sparql.query().convert()
 		if len(results["results"]["bindings"]) > 0:
-			return {"accepted": True}
+			myUri = uri
+			if self.config['mirrored']== True:
+				myUri = uri.replace(self.config['ns']['origin'], self.config['ns']['local'])
+			return {"accepted": True, "url": "%s.html"%myUri}
 		return {"accepted": False}
 
 	def execute(self, uri):

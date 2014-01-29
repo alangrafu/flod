@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 app = Flask(__name__)
 import json
 import sys
@@ -32,21 +32,31 @@ for mod in settings['modules']:
         printerr("No operations!")
 
 
+cachedDocuments = {}
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
-	uri = "%s%s" % (settings['ns']['local'], path)
+	localUri = "%s%s" % (settings['ns']['local'], path)
+	#Check if URI is mirrored, otherwise originUri == localUri
+	originUri = localUri
 	if settings['mirrored'] == True:
-		uri = "%s%s" % (settings['ns']['origin'], path)
+		originUri = "%s%s" % (settings['ns']['origin'], path)
+
+	if localUri in cachedDocuments.keys():
+		originUri = cachedDocuments[localUri]['origin']
 	content = ""
 	for module in modules:
-		response = module.test(uri)
+		response = module.test(originUri)
 		if response['accepted'] == True:
-			content = module.execute(uri)
+			if localUri != response['url']:
+				cachedDocuments[response['url']] = {"local": localUri, "origin": originUri}
+				return redirect(response['url'], code=303)
+			content = module.execute(originUri)
 			return content
 			break
 	return 'Resource not found', 404
 	
 
 if __name__ == "__main__":
-    app.run(host=settings['host'], port=settings['port'])
+    app.run(host=settings['host'], port=settings['port'], debug=True)
