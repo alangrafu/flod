@@ -1,6 +1,9 @@
 from SPARQLWrapper import SPARQLWrapper, JSON, XML
 from accept import Accept
 from jinja2 import Template
+from os import listdir
+from os.path import isfile, join
+
 
 class Types:
 	config = {}
@@ -39,23 +42,46 @@ LIMIT 1""" % (uri, uri, uri))
 
 	def execute(self, req):
 		uri = req['originUri']
-		print req['mimetype']
 		if req['mimetype'] == 'text/html':
+			mypathquery = "components/rdfs__Resource/queries/"
+			mypathtemplate = "components/rdfs__Resource/"
+			onlyfiles = [ f for f in listdir(mypathquery) if isfile(join(mypathquery,f)) ]
+			queries = {}
+			for filename in onlyfiles:
+				try:
+					f = open("%s%s"%(mypathquery, filename))
+					sparqlQuery = Template("\n".join(f.readlines()))
+					self.sparql.setQuery(sparqlQuery.render(uri=uri))
+					f.close()
+				except Exception, e:
+					print e
+					print "CANNOT OPEN FILE %s"%filename
+					exit(2)
+				self.sparql.setReturnFormat(JSON)
+				results = self.sparql.query().convert()
+				queries[filename.replace(".query", "")] = results["results"]["bindings"]
+				try:
+					f = open("%s%s"%(mypathtemplate, "html.template"))
+					html = Template("\n".join(f.readlines()))
+					f.close()
+				except Exception, e:
+					return "Can't find html.template in %s"%mypathtemplate
+					exit(3)
+				try:
+					out = html.render(queries=queries, uri=uri)
+				except Exception:
+					return "Rendering problems"
+				return out
+		else:
+			#Try to find .construct query first
 			try:
-				f = open("components/rdfs__Resource/queries/main.query")
+				f = open("components/rdfs__Resource/queries/main.construct")
 				sparqlQuery = Template("\n".join(f.readlines()))
 				self.sparql.setQuery(sparqlQuery.render(uri=uri))
 				f.close()
+			#If not found, use a generic CONSTRUCT query
 			except Exception, e:
-				print e
-			self.sparql.setReturnFormat(JSON)
-			results = self.sparql.query().convert()
-
-			r = """%s"""%uri
-			for result in results["results"]["bindings"]:
-				r += """%s\t%s\n\n""" %(result["p"]["value"], result["o"]["value"])
-		else:
-			self.sparql.setQuery("""
+				self.sparql.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     CONSTRUCT {<%s>  ?p ?o}
     WHERE { <%s> ?p ?o }
