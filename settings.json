@@ -2,11 +2,11 @@
 	"modules": [ "Types"],
 	"ns": {
 		"local": "http://localhost:5001/",
-		"origin": "http://dbpedia.org/resource/"
+		"origin": "http://poderopedia.com/vocab/"
 	},
 	"mirrored": true,
 	"endpoints": {
-		"local": "http://dbpedia.org/sparql"
+		"local": "http://localhost:3030/poder/query"
 	},
 	"host": "0.0.0.0",
 	"port": 5001
