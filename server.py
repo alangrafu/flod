@@ -44,16 +44,19 @@ def catch_all(path):
 		originUri = "%s%s" % (settings['ns']['origin'], path)
 	#Store .html, .ttl, .json URLs that are not present in triple store.
 	if localUri in cachedDocuments.keys():
-		originUri = cachedDocuments[localUri]['origin']
+		originUri = cachedDocuments[localUri]['originUri']
 	content = ""
 	r = {"originUri": originUri, "localUri": localUri, "mimetype": mime}
 	for module in modules:
 		response = module.test(r)
 		if response['accepted'] == True:
 			if localUri != response['url']:
-				cachedDocuments[response['url']] = {"local": localUri, "origin": originUri, "mime": mime}
+				cachedDocuments[response['url']] = response
+				cachedDocuments[response['url']]["localUri"]  = localUri
+				cachedDocuments[response['url']]["originUri"] = originUri
+				cachedDocuments[response['url']]["mime"]   = mime
 				return redirect(response['url'], code=303)
-			content = module.execute(r)
+			content = module.execute(response)
 			return content
 			break
 	return 'Resource not found', 404
