@@ -3,6 +3,7 @@ from accept import Accept
 from jinja2 import Template
 from os import listdir
 from os.path import isfile, join
+from flask import Response
 
 
 class Types:
@@ -43,13 +44,18 @@ LIMIT 1""" % (uri, uri, uri))
 	def execute(self, req):
 		uri = req['originUri']
 		if req['mimetype'] == 'text/html':
-			mypathquery = "components/rdfs__Resource/queries/"
-			mypathtemplate = "components/rdfs__Resource/"
-			onlyfiles = [ f for f in listdir(mypathquery) if isfile(join(mypathquery,f)) ]
+			queryPath = "components/types/rdfs__Resource/queries/"
+			templatePath = "components/types/rdfs__Resource/"
+			try:
+				onlyfiles = [ f for f in listdir(queryPath) if isfile(join(queryPath,f)) ]
+			except OSError, e:
+				print "Can't find path for queries. Aborting"
+				return Response(response="Internal error\n\n", status=500)
+
 			queries = {}
 			for filename in onlyfiles:
 				try:
-					f = open("%s%s"%(mypathquery, filename))
+					f = open("%s%s"%(queryPath, filename))
 					sparqlQuery = Template("\n".join(f.readlines()))
 					self.sparql.setQuery(sparqlQuery.render(uri=uri))
 					f.close()
@@ -61,11 +67,11 @@ LIMIT 1""" % (uri, uri, uri))
 				results = self.sparql.query().convert()
 				queries[filename.replace(".query", "")] = results["results"]["bindings"]
 				try:
-					f = open("%s%s"%(mypathtemplate, "html.template"))
+					f = open("%s%s"%(templatePath, "html.template"))
 					html = Template("\n".join(f.readlines()))
 					f.close()
 				except Exception, e:
-					return "Can't find html.template in %s"%mypathtemplate
+					return "Can't find html.template in %s"%templatePath
 					exit(3)
 				try:
 					out = html.render(queries=queries, uri=uri)
