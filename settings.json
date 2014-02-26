@@ -1,5 +1,5 @@
 {
-	"modules": [ "Types"],
+	"modules": [ "Static", "Types"],
 	"ns": {
 		"local": "http://localhost:5001/",
 		"origin": "http://poderopedia.com/vocab/"

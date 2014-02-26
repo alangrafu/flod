@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request
+from flask import Flask, redirect, request, Response
 app = Flask(__name__)
 import json
 import sys
@@ -11,7 +11,7 @@ try:
 	settings_file = open("settings.json")
 	settings = json.load(settings_file)
 except Exception, e:
-	app.logger.error("ERROR: Can't load settings.json")
+	printerr("ERROR: Can't load settings.json")
 	exit(1)
 
 
@@ -45,7 +45,7 @@ def catch_all(path):
 	#Store .html, .ttl, .json URLs that are not present in triple store.
 	if localUri in cachedDocuments.keys():
 		originUri = cachedDocuments[localUri]['originUri']
-	content = ""
+	c = ""
 	r = {"originUri": originUri, "localUri": localUri, "mimetype": mime}
 	for module in modules:
 		response = module.test(r)
@@ -56,8 +56,10 @@ def catch_all(path):
 				cachedDocuments[response['url']]["originUri"] = originUri
 				cachedDocuments[response['url']]["mime"]   = mime
 				return redirect(response['url'], code=303)
-			content = module.execute(response)
-			return content
+			c = module.execute(response)
+			if not "mimetype" in c:
+				c['mimetype'] = 'text/html'
+			return Response(c['content'], mimetype=c['mimetype'])
 			break
 	return 'Resource not found', 404
 	

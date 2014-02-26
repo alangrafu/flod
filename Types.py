@@ -7,13 +7,13 @@ from flask import Response
 from Namespace import Namespace
 
 class Types:
-	config = {}
+	settings = {}
 	sparql = None
 	a = None
-	def __init__(self, config):
+	def __init__(self, settings):
 		"""Initializes class"""
-		self.config = config
-		self.sparql = SPARQLWrapper(self.config['endpoints']['local'])
+		self.settings = settings
+		self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
 		self.ns = Namespace()
 
 	def __getResourceType(self, uri):
@@ -53,8 +53,8 @@ LIMIT 1""" % (uri, uri, uri))
 		results = self.sparql.query().convert()
 		if len(results["results"]["bindings"]) > 0:
 			myUri = uri
-			if self.config['mirrored']== True:
-				myUri = uri.replace(self.config['ns']['origin'], self.config['ns']['local'])
+			if self.settings['mirrored']== True:
+				myUri = uri.replace(self.settings['ns']['origin'], self.settings['ns']['local'])
 			extension = self.a.getExtension(r['mimetype'])
 			types = self.__getResourceType(uri)
 			curiedTypes = []
@@ -141,4 +141,4 @@ LIMIT 100""" % (uri, uri))
 		#self.sparql.setReturnFormat(JSON)
 			results = self.sparql.query().convert()
 			r = results.serialize(format=self.a.getConversionType(req['mimetype']))
-		return r
+		return {"content": r, "mimetype": "text/turtle"}
