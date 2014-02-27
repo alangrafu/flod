@@ -14,13 +14,13 @@ Currently there is no, I repeat, NO stable/usable version. Hopefully this will c
 # TODO
 
 - [X] Support for modules
-- [ ] Use of templates
+- [X] Use of templates
 - [X] Support mirroring
 - [ ] Multiple mirroring
 - [ ] Cache
-- [ ] Equivalent of Type module
-- [ ] Equivalent of Service module
-- [ ] Content negotiation
+- [X] Equivalent of Type module
+- [X] Equivalent of Service module
+- [X] Content negotiation
 - [ ] SPARQL transformation
 - [ ] Multiple namespaces
 - [ ] Visualization filters
