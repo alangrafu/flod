@@ -6,7 +6,8 @@
 	},
 	"mirrored": true,
 	"endpoints": {
-		"local": "http://localhost:3030/poder/query"
+		"local": "http://localhost:3030/poder/query",
+		"dbpedia": "http://dbpedia.org/sparql"
 	},
 	"host": "0.0.0.0",
 	"port": 5001

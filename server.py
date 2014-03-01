@@ -57,6 +57,7 @@ def catch_all(path):
 				cachedDocuments[response['url']]["mime"]   = mime
 				return redirect(response['url'], code=303)
 			c = module.execute(response)
+			print c
 			if not "mimetype" in c:
 				c['mimetype'] = 'text/html'
 			return Response(c['content'], mimetype=c['mimetype'])
