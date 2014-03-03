@@ -74,7 +74,7 @@ echo " 		\"origin\": \"$ns/\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"mirrored\": true," >> $SETTINGS
 echo " 	\"endpoints\": {" >> $SETTINGS
-echo " 		\"local\": \"$sparql\"," >> $SETTINGS
+echo " 		\"local\": \"$endpoint\"," >> $SETTINGS
 echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
