@@ -78,7 +78,8 @@ echo " 		\"local\": \"$sparql\"," >> $SETTINGS
 echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
-echo " 	\"port\": $PORT" >> $SETTINGS
+echo " 	\"port\": $PORT", >> $SETTINGS
+echo " 	\"root\": \"index.html\"" >> $SETTINGS
 echo "}" >> $SETTINGS
 
 

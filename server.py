@@ -33,7 +33,10 @@ for mod in settings['modules']:
 
 cachedDocuments = {}
 
-@app.route('/', defaults={'path': ''})
+@app.route('/')
+def root_url():
+	return redirect(settings['root'], code=302)
+
 @app.route('/<path:path>')
 def catch_all(path):
 	mime = request.accept_mimetypes.best
