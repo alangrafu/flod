@@ -4,18 +4,11 @@
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
 COMPONENTS=$DIR/components
-PIP=`which pip`
 VE=`which virtualenv`
 SETTINGS="settings.json"
 PORT=5001
 
 #Detecting neede tools
-if [ -z "$PIP" ]; then
-	echo "You need pip installed. Run"
-	echo "  sudo easy_install -U pip"
-	echo "and then execute installation/install.sh again"
-	exit 1
-fi
 
 if [ -z "$VE" ]; then
 	echo "You need virtualenv installed. Run"
@@ -90,6 +83,18 @@ VE_DIR="flod_env_"$RANDOM
 echo "Creating virtualenv $VE_DIR..."
 $VE -q $VE_DIR
 source $VE_DIR/bin/activate
+
+
+
+PIP=`which pip`
+
+if [ -z "$PIP" ]; then
+	echo "You need pip installed. Run"
+	echo "  sudo easy_install -U pip"
+	echo "and then execute installation/install.sh again"
+	deactivate
+	exit 1
+fi
 
 echo "Loading FLOD requirements"
 $PIP -q install -r $REQ
