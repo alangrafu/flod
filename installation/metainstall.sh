@@ -3,12 +3,13 @@
 ##Meta installation script
 ##Author: Alvaro Graves <alvaro AT graves DOT cl>
 
-GIT=git
+GIT=$(which git)
 FLOD_REPO=https://github.com/alangrafu/flod.git
 FLOD_DIR=flod
 
-if [ ! -e $GIT ]; then
-	echo "Please install $GIT first"
+
+if [ $GIT == "" ]; then
+	echo "Please install git first"
 	exit 1
 fi
 
