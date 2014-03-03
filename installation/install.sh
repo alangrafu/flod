@@ -121,5 +121,7 @@ fi
 echo
 echo
 echo "-----------------------------"
-echo "To run FLOD, execute start.sh"
+echo "To run FLOD, run:"
+echo "# cd flod"
+echo "# ./start.sh"
 echo "-----------------------------"
