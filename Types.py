@@ -66,7 +66,6 @@ LIMIT 1""" % (uri, uri, uri))
 			response['url'] = "%s.%s"%(myUri, extension)
 			response["types"] = curiedTypes
 			return response
-		print results
 		return {"accepted": False}
 
 	def execute(self, req):
@@ -109,14 +108,13 @@ LIMIT 1""" % (uri, uri, uri))
 							try:
 								self.sparql = SPARQLWrapper(self.settings['endpoints'][currentEndpoint])
 							except:
+								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
 								self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
 							f = open("%s/%s"%(root, filename))
 							sparqlQuery = Template("\n".join(f.readlines()))
 							self.sparql.setQuery(sparqlQuery.render(uri=uri))
 							f.close()
 						except Exception, ex:
-							print "--------------"
-							print ex
 							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
 							print sys.exc_info()
 							
@@ -128,8 +126,6 @@ LIMIT 1""" % (uri, uri, uri))
 				out = html.render(queries=queries, uri=uri)
 			except Exception:
 				return {"content":"Rendering problems", "status":500}
-			print getcwd()
-			print "\n\n\n\n"
 			return {"content":out}
 		else:
 			#Try to find .construct query first
@@ -148,7 +144,6 @@ LIMIT 1""" % (uri, uri, uri))
 				f.close()
 			#If not found, use a generic CONSTRUCT query
 			except Exception, e:
-				print e
 				self.sparql.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     CONSTRUCT {<%s>  ?p ?o}
