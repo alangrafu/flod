@@ -1,14 +1,14 @@
 {
-	"modules": [ "Static", "Services", "Types"],
-	"ns": {
-		"local": "http://localhost:5001/",
-		"origin": "http://poderopedia.com/vocab/"
-	},
-	"mirrored": true,
-	"endpoints": {
-		"local": "http://localhost:3030/poder/query",
-		"dbpedia": "http://dbpedia.org/sparql"
-	},
-	"host": "0.0.0.0",
-	"port": 5001
+ 	"modules": [ "Static", "Services", "Types"],
+ 	"ns": {
+ 		"local": "http://localhost/",
+ 		"origin": "http://graves.cl//"
+ 	},
+ 	"mirrored": true,
+ 	"endpoints": {
+ 		"local": "",
+ 		"dbpedia": "http://dbpedia.org/sparql"
+ 	},
+ 	"host": "0.0.0.0",
+ 	"port": 5001
 }

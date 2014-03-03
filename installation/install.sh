@@ -6,6 +6,8 @@ REQ=$DIR/installation/requirements.txt
 COMPONENTS=$DIR/components
 PIP=`which pip`
 VE=`which virtualenv`
+SETTINGS="settings.json"
+PORT=5001
 
 #Detecting neede tools
 if [ -z "$PIP" ]; then
@@ -25,13 +27,18 @@ fi
 
 #Ask questions:
 
-baseUrl = "http://localhost:5001"
+baseUrl="http://localhost:5001"
 echo -n "(1/3) Whats your domain name? (default '$baseUrl'): "
 read -u 1 aux_baseUrl
 echo 
 if [ "$aux_baseUrl" != "" ]; then
   baseUrl=$aux_baseUrl
 fi
+aux_port=$(echo $baseUrl |awk -F":" '{print $3}')
+if [ "$aux_port" != "" ]; then
+  PORT=$aux_port
+fi
+
 baseUrl="`echo $baseUrl | sed 's/\/$//'`" # remove any ending slash
 ns=$baseUrl/
 echo    "(2/3) What local namespace of your data?"
@@ -39,7 +46,7 @@ echo -n "(default '$ns'): "
 read -u 1 aux_ns
 echo ""
 if [ "$aux_ns" != "" ]; then
-  aux_ns="`echo $aux_ns | sed 's/\/$//'`/" # remove any ending slash and append one.
+  aux_ns="`echo $aux_ns | sed 's/\/$//'`" # remove any ending slash and append one.
   ns=$aux_ns
 fi
 
@@ -55,23 +62,23 @@ fi
 
 if [ -e $SETTINGS ]; then
 	NOW=$(date +"%s")
-	echo "WARNING: Moving existing $SETTINGS to $NOW_$SETTINGS"
-	mv "$SETTINGS"  "$NOW_$SETTINGS"
+	echo "WARNING: Moving existing $SETTINGS to $NOW.$SETTINGS"
+	mv "$SETTINGS"  "$NOW.$SETTINGS"
 fi
 
-echo " {" >> $SETTINGS
+echo "{" >> $SETTINGS
 echo " 	\"modules\": [ \"Static\", \"Services\", \"Types\"]," >> $SETTINGS
 echo " 	\"ns\": {" >> $SETTINGS
-echo " 		\"local\": \"http://localhost:5001/\"," >> $SETTINGS
-echo " 		\"origin\": \"http://poderopedia.com/vocab/\"" >> $SETTINGS
+echo " 		\"local\": \"$baseUrl/\"," >> $SETTINGS
+echo " 		\"origin\": \"$ns/\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"mirrored\": true," >> $SETTINGS
 echo " 	\"endpoints\": {" >> $SETTINGS
-echo " 		\"local\": \"http://localhost:3030/poder/query\"," >> $SETTINGS
+echo " 		\"local\": \"$sparql\"," >> $SETTINGS
 echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
-echo " 	\"port\": 5001" >> $SETTINGS
+echo " 	\"port\": $PORT" >> $SETTINGS
 echo "}" >> $SETTINGS
 
 
@@ -107,4 +114,6 @@ fi
 
 echo
 echo
+echo "-----------------------------"
 echo "To run FLOD, execute start.sh"
+echo "-----------------------------"
