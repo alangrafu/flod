@@ -1,0 +1,3 @@
+{%for row in queries.graphs%}
+{{row.g.value}}<br/>
+{%endfor%}
