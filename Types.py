@@ -11,10 +11,10 @@ class Types:
 	settings = {}
 	sparql = None
 	a = None
-	def __init__(self, settings):
+	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
-		self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
+		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 		self.ns = Namespace()
 
 	def __getResourceType(self, uri):
@@ -28,7 +28,7 @@ class Types:
 		self.sparql.setReturnFormat(JSON)
 		results = self.sparql.query().convert()
 		for t in results["results"]["bindings"]:
-			types.append(t['t']['value'])
+			types.append(t["t"]["value"])
 		return types
 
 	def operations(self):
@@ -37,8 +37,8 @@ class Types:
 	def test(self, r):
 		"""Test if this module should take care of that URI"""
 		self.a = Accept()
-		uri = r['originUri']
-		self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
+		uri = r["originUri"]
+		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 		self.sparql.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?p ?o
@@ -54,29 +54,29 @@ LIMIT 1""" % (uri, uri, uri))
 		results = self.sparql.query().convert()
 		if len(results["results"]["bindings"]) > 0:
 			myUri = uri
-			if self.settings['mirrored']== True:
-				myUri = uri.replace(self.settings['ns']['origin'], self.settings['ns']['local'])
-			extension = self.a.getExtension(r['mimetype'])
+			if self.settings["mirrored"]== True:
+				myUri = uri.replace(self.settings["ns"]["origin"], self.settings["ns"]["local"])
+			extension = self.a.getExtension(r["mimetype"])
 			types = self.__getResourceType(uri)
 			curiedTypes = []
 			for t in types:
 				curiedTypes.append(self.ns.uri2curie(t))
 			response = r
-			response['accepted'] = True
-			response['url'] = "%s.%s"%(myUri, extension)
+			response["accepted"] = True
+			response["url"] = "%s.%s"%(myUri, extension)
 			response["types"] = curiedTypes
 			return response
 		return {"accepted": False}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
-		uri = req['originUri']
+		uri = req["originUri"]
 		currentDir = getcwd()
-		if req['mimetype'] == 'text/html':
+		if req["mimetype"] == "text/html":
 			queryPath = "components/types/rdfs__Resource/queries/"
 			templatePath = "components/types/rdfs__Resource/"
-			if len(req['types']) > 0:
-				for t in req['types']:
+			if len(req["types"]) > 0:
+				for t in req["types"]:
 					tDir = t.replace(":", "__")
 					_queryPath = "components/types/%s/queries/" % tDir
 					_templatePath = "components/types/%s/" % tDir
@@ -102,21 +102,20 @@ LIMIT 1""" % (uri, uri, uri))
 				for root, dirs, files in walk(queryPath):
 					for filename in files:
 						try:
-							currentEndpoint = 'local'
+							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							try:
-								self.sparql = SPARQLWrapper(self.settings['endpoints'][currentEndpoint])
+								self.sparql = SPARQLWrapper(self.settings["endpoints"][currentEndpoint])
 							except:
 								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
-								self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
+								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 							f = open("%s/%s"%(root, filename))
 							sparqlQuery = Template("\n".join(f.readlines()))
 							self.sparql.setQuery(sparqlQuery.render(uri=uri))
 							f.close()
 						except Exception, ex:
 							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
-							print sys.exc_info()
 							
 						self.sparql.setReturnFormat(JSON)
 						results = self.sparql.query().convert()
@@ -131,8 +130,8 @@ LIMIT 1""" % (uri, uri, uri))
 			#Try to find .construct query first
 			try:
 				queryPath = "components/types/rdfs__Resource/queries/main.construct"
-				if(len(req['types']) > 0):
-					for t in req['types']:
+				if(len(req["types"]) > 0):
+					for t in req["types"]:
 						tDir = t.replace(":", "__")
 						aux = "components/types/%s/queries/main.construct" % tDir
 						if exists(aux):
@@ -153,5 +152,5 @@ LIMIT 100""" % (uri, uri))
 			self.sparql.setReturnFormat(XML)
 		#self.sparql.setReturnFormat(JSON)
 			results = self.sparql.query().convert()
-			r = results.serialize(format=self.a.getConversionType(req['mimetype']))
+			r = results.serialize(format=self.a.getConversionType(req["mimetype"]))
 		return {"content": r, "mimetype": "text/turtle"}

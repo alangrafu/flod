@@ -11,10 +11,10 @@ class Services:
 	basedir = "components/services/"
 	sparql = None
 	a = None
-	def __init__(self, settings):
+	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
-		self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
+		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 		self.ns = Namespace()
 
 	def __getResourceType(self, uri):
@@ -28,24 +28,24 @@ class Services:
 		self.sparql.setReturnFormat(JSON)
 		results = self.sparql.query().convert()
 		for t in results["results"]["bindings"]:
-			types.append(t['t']['value'])
+			types.append(t["t"]["value"])
 		return types
 
 	def operations(self):
 		print "hola Types"
 
 	def test(self, r):
-		file = r['localUri'].replace(self.settings['ns']['local'], "", 1)
+		file = r["localUri"].replace(self.settings["ns"]["local"], "", 1)
 		if exists(self.basedir+file):
-			return {"accepted": True, "url": r['localUri']}
+			return {"accepted": True, "url": r["localUri"]}
 		return {"accepted": False}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
-		file = req['url'].replace(self.settings['ns']['local'], "", 1)
+		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
 		currentDir = getcwd()
 		service = self.basedir+file
-		uri = req['url']
+		uri = req["url"]
 		queryPath = "%s/queries/"%service
 		templatePath = "%s/" % service
 		try:
@@ -58,22 +58,19 @@ class Services:
 				for root, dirs, files in walk(queryPath):
 					for filename in files:
 						try:
-							currentEndpoint = 'local'
+							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							try:
-								self.sparql = SPARQLWrapper(self.settings['endpoints'][currentEndpoint])
+								self.sparql = SPARQLWrapper(self.settings["endpoints"][currentEndpoint])
 							except:
 								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
-								self.sparql = SPARQLWrapper(self.settings['endpoints']['local'])
+								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 							f = open("%s/%s"%(root, filename))
 							sparqlQuery = Template("\n".join(f.readlines()))
 							self.sparql.setQuery(sparqlQuery.render(uri=uri))
 							f.close()
 						except Exception, ex:
-							print "--------------"
-							print ex
-							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
 							print sys.exc_info()
 							
 						self.sparql.setReturnFormat(JSON)
