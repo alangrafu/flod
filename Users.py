@@ -59,17 +59,30 @@ class Users:
 			return {"content": "Redirecting", "uri": "/", "status": 303}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
+	def _createUser(self, req, createUserUrl):
+		with open("adduser.html") as f:
+			addHTML = Template("\n".join(f.readlines()))
+		if req["request"].method == "GET" or req["request"].method == "HEAD":
+				return {"content": addHTML.render(logged = True), "uri": logoutUrl}
+		if req["request"].method == "POST":
+			if "username" not in session or "password" not in session:
+				return {"content": addHTML.render(logged = True, creationError=True), "uri": logoutUrl}
+		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		loginUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["login_url"])
 		logoutUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["logout_url"])
+		createUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["create_user"])
 		#Login
 		if req["url"] == loginUrl:
 			return self._login(req, loginUrl)
 		#Logout
 		if req["url"] == logoutUrl:
 			return self._logout(req, logoutUrl)
+		#Create user
+		if req["url"] == createUserUrl:
+			return self._createUser(req, createUserUrl)
 		return {"content": "login", "uri": loginUrl, "status": 303}
 
 	def load_user(self, username, password):
