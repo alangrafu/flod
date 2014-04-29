@@ -1,0 +1,14 @@
+@prefix vocab: <http://flod.info/> .
+
+<#1> a vocab:User ;
+    vocab:name "User A";
+    vocab:username "admin";
+    vocab:password "secret";
+    vocab:sha1Pass "2f078ff4f34a3c1d59a3dd1eac85e629c92800814bb442e81aa366849e59f0088b880af3ab2e1ff1dfc2e5c15217044bec27b61a15d259a7fcb413e5067aa5e8";
+    vocab:salt "asd" ;
+    vocab:belongsToGroup </group/admin/> .
+
+</group/admin> a vocab:Group;
+               vocab:name "Admin group";
+               vocab:permittedPattern "/admin/";
+               vocab:forbiddenPattern "/null/" .
