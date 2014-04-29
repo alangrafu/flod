@@ -12,10 +12,11 @@
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
             <li><a href="/">Home</a></li>
-            {%if logged == True%}
+            {%if logged == False or logged == None%}
             <li><a href="/login">Login</a></li>
-            {%else%}
-            <li class="active"><a href="/logout">Logout</a></li>
+            {%endif%}
+            {%if logged == True%}
+            <li><a href="/logout">Logout</a></li>
             {%endif%}
           </ul>
         </div><!--/.nav-collapse -->

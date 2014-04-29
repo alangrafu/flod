@@ -1,3 +1,15 @@
+{%extends "components/includes/base.html"%}
+{%block content%}
+
+<div class="container">
+<h1>Named graphs</h1>
+<div class="row">
+
 {%for row in queries.graphs%}
 {{row.g.value}}<br/>
 {%endfor%}
+	
+</div>
+	
+</div>
+{%endblock%}

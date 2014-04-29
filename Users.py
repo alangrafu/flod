@@ -1,14 +1,11 @@
 from flask_login import session, redirect, url_for
 from jinja2 import Template
-from jinja2 import FileSystemLoader
-from jinja2.environment import Environment
 import hashlib
 from rdflib import Namespace, Graph, Literal, URIRef
 from slugify import slugify
 import sys
 #from Namespace import Namespace
-env = Environment()
-env.loader = FileSystemLoader('.')
+
 class Users:
 	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser"}}
 	users = {}
@@ -28,7 +25,7 @@ class Users:
 			return {"accepted": False, "url": r["localUri"]}
 		if r["localUri"] == logoutUrl:
 			return {"accepted": True, "url": logoutUrl}
-		return {"accepted": True, "url": loginUrl}
+		return {"accepted": False, "url": loginUrl}
 
 
 	def _login(self, req, loginUrl):
