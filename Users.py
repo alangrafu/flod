@@ -1,11 +1,14 @@
 from flask_login import session, redirect, url_for
 from jinja2 import Template
+from jinja2 import FileSystemLoader
+from jinja2.environment import Environment
 import hashlib
 from rdflib import Namespace, Graph, Literal, URIRef
 from slugify import slugify
 import sys
 #from Namespace import Namespace
-
+env = Environment()
+env.loader = FileSystemLoader('.')
 class Users:
 	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser"}}
 	users = {}
@@ -29,9 +32,8 @@ class Users:
 
 
 	def _login(self, req, loginUrl):
-		loginHTML = None
-		with open("login.html") as f:
-			loginHTML = Template("\n".join(f.readlines()))
+		loginHTML = None		
+		loginHTML = env.get_template("login.html")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
 				return {"content": loginHTML.render(logged=True, loginError=False), "uri": loginUrl}
@@ -51,9 +53,7 @@ class Users:
 
 	def _logout(self, req, logoutUrl):
 		logoutHTML = None
-		print "LOGOUT"
-		with open("logout.html") as f:
-			logoutHTML = Template("\n".join(f.readlines()))
+		logoutHTML = env.get_template("logout.html")
 		if "username" in session:
 			if req["request"].method == "GET" or req["request"].method == "HEAD":
 				return {"content": logoutHTML.render(logged = True), "uri": logoutUrl}
@@ -66,8 +66,7 @@ class Users:
 
 	def _createUser(self, req, createUserUrl):
 		VOCAB = Namespace("http://flod.info/")
-		with open("adduser.html") as f:
-			addHTML = Template("\n".join(f.readlines()))
+		addHTML = env.get_template("adduser.html")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 				return {"content": addHTML.render(logged = True), "uri": createUserUrl}
 		if req["request"].method == "POST":

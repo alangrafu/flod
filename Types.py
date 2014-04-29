@@ -6,6 +6,11 @@ from os.path import isfile, join, exists
 from flask import Response
 from Namespace import Namespace
 import sys
+from jinja2 import FileSystemLoader
+from jinja2.environment import Environment
+
+env = Environment()
+env.loader = FileSystemLoader('.')
 
 class Types:
 	settings = {}
@@ -91,10 +96,8 @@ LIMIT 1""" % (uri, uri, uri))
 				return Response(response="Internal error\n\n", status=500)
 
 			queries = {}
-			try:
-				f = open("%s%s"%(templatePath, "html.template"))
-				html = Template("\n".join(f.readlines()))
-				f.close()
+			try:				
+				html = env.get_template("%s%s"%(templatePath, "html.template"))
 			except Exception:
 				return {"content": "Can't find html.template in %s"%templatePath, "status": 500}
 
@@ -110,10 +113,8 @@ LIMIT 1""" % (uri, uri, uri))
 							except:
 								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
 								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
-							f = open("%s/%s"%(root, filename))
-							sparqlQuery = Template("\n".join(f.readlines()))
+							sparqlQuery = env.get_template("%s/%s"%(root, filename))
 							self.sparql.setQuery(sparqlQuery.render(uri=uri))
-							f.close()
 						except Exception, ex:
 							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
 							
@@ -137,10 +138,8 @@ LIMIT 1""" % (uri, uri, uri))
 						if exists(aux):
 							queryPath = aux
 							break
-				f = open(queryPath)
-				sparqlQuery = Template("\n".join(f.readlines()))
+				sparqlQuery = env.get_template(queryPath)
 				self.sparql.setQuery(sparqlQuery.render(uri=uri))
-				f.close()
 			#If not found, use a generic CONSTRUCT query
 			except Exception, e:
 				self.sparql.setQuery("""

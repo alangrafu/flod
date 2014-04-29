@@ -2,7 +2,11 @@ from flask import Flask, redirect, request, Response
 app = Flask(__name__)
 import json
 import sys
+from jinja2 import FileSystemLoader
+from jinja2.environment import Environment
 
+env = Environment()
+env.loader = FileSystemLoader('.')
 
 def printerr(msg):
 	sys.stderr.write(msg+"\n")

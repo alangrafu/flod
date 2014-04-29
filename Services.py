@@ -5,6 +5,12 @@ from os.path import isfile, join, exists
 from flask import Response
 from Namespace import Namespace
 import sys
+from jinja2 import FileSystemLoader
+from jinja2.environment import Environment
+
+env = Environment()
+env.loader = FileSystemLoader('.')
+
 
 class Services:
 	settings = {}
@@ -66,10 +72,8 @@ class Services:
 							except:
 								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
 								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
-							f = open("%s/%s"%(root, filename))
-							sparqlQuery = Template("\n".join(f.readlines()))
+							sparqlQuery = env.get_template("%s/%s"%(root, filename))
 							self.sparql.setQuery(sparqlQuery.render(uri=uri))
-							f.close()
 						except Exception, ex:
 							print sys.exc_info()
 							
@@ -78,9 +82,7 @@ class Services:
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 		chdir(currentDir)
 		try:
-			f = open("%s%s"%(templatePath, "html.template"))
-			html = Template("\n".join(f.readlines()))
-			f.close()
+			html = env.get_template("%s%s"%(templatePath, "html.template"))
 		except Exception:
 			return "Can't find html.template in %s"%templatePath
 			exit(3)

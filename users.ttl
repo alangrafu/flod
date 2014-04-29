@@ -4,8 +4,8 @@
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-</alberto> vocab:password "asd 123 #$% 123" ;
-    vocab:username "álberto" .
+</asdxzc> vocab:password "zxczxc" ;
+    vocab:username "asdxzc" .
 
 <file:///Users/agraves/github/flod/users.ttl#1> a vocab:User ;
     vocab:belongsToGroup <file:///group/admin/> ;
@@ -14,6 +14,9 @@
     vocab:salt "asd" ;
     vocab:sha1Pass "2f078ff4f34a3c1d59a3dd1eac85e629c92800814bb442e81aa366849e59f0088b880af3ab2e1ff1dfc2e5c15217044bec27b61a15d259a7fcb413e5067aa5e8" ;
     vocab:username "admin" .
+
+<file:///alberto> vocab:password "asd 123 #$% 123" ;
+    vocab:username "álberto" .
 
 <file:///alvaro> vocab:password "cachupine" ;
     vocab:username "alvaro" .
