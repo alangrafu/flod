@@ -1,14 +1,34 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vocab: <http://flod.info/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<#1> a vocab:User ;
-    vocab:name "User A";
-    vocab:username "admin";
-    vocab:password "secret";
-    vocab:sha1Pass "2f078ff4f34a3c1d59a3dd1eac85e629c92800814bb442e81aa366849e59f0088b880af3ab2e1ff1dfc2e5c15217044bec27b61a15d259a7fcb413e5067aa5e8";
+</alberto> vocab:password "asd 123 #$% 123" ;
+    vocab:username "álberto" .
+
+<file:///Users/agraves/github/flod/users.ttl#1> a vocab:User ;
+    vocab:belongsToGroup <file:///group/admin/> ;
+    vocab:name "User A" ;
+    vocab:password "secret" ;
     vocab:salt "asd" ;
-    vocab:belongsToGroup </group/admin/> .
+    vocab:sha1Pass "2f078ff4f34a3c1d59a3dd1eac85e629c92800814bb442e81aa366849e59f0088b880af3ab2e1ff1dfc2e5c15217044bec27b61a15d259a7fcb413e5067aa5e8" ;
+    vocab:username "admin" .
 
-</group/admin> a vocab:Group;
-               vocab:name "Admin group";
-               vocab:permittedPattern "/admin/";
-               vocab:forbiddenPattern "/null/" .
+<file:///alvaro> vocab:password "cachupine" ;
+    vocab:username "alvaro" .
+
+<file:///alvaro2> vocab:password "asd" ;
+    vocab:username "alvaro2" .
+
+<file:///group/admin> a vocab:Group ;
+    vocab:forbiddenPattern "/null/" ;
+    vocab:name "Admin group" ;
+    vocab:permittedPattern "/admin/" .
+
+<file:///nico> vocab:password "robocop" ;
+    vocab:username "nico" .
+
+<file:///nico2> vocab:password "asdok;asd" ;
+    vocab:username "nico2" .
+

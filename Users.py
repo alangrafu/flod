@@ -1,6 +1,9 @@
 from flask_login import session, redirect, url_for
 from jinja2 import Template
 import hashlib
+from rdflib import Namespace, Graph, Literal, URIRef
+from slugify import slugify
+import sys
 #from Namespace import Namespace
 
 class Users:
@@ -15,7 +18,9 @@ class Users:
 	def test(self, r):
 		loginUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["login_url"])
 		logoutUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["logout_url"])
-		print r["localUri"] == logoutUrl
+		createUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["create_user"])
+		if r["localUri"] == createUserUrl:
+			return {"accepted": True, "url": createUserUrl}
 		if "username" in session and (r["localUri"] != loginUrl and r["localUri"] != logoutUrl):
 			return {"accepted": False, "url": r["localUri"]}
 		if r["localUri"] == logoutUrl:
@@ -60,13 +65,31 @@ class Users:
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def _createUser(self, req, createUserUrl):
+		VOCAB = Namespace("http://flod.info/")
 		with open("adduser.html") as f:
 			addHTML = Template("\n".join(f.readlines()))
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": addHTML.render(logged = True), "uri": logoutUrl}
+				return {"content": addHTML.render(logged = True), "uri": createUserUrl}
 		if req["request"].method == "POST":
-			if "username" not in session or "password" not in session:
-				return {"content": addHTML.render(logged = True, creationError=True), "uri": logoutUrl}
+			if "username" not in session:
+				return {"content": addHTML.render(logged = True, creationError=True), "uri": createUserUrl}
+			g = Graph()
+			try:
+				_username = req["request"].form["username"]
+				_usernameLiteral = Literal(_username)
+				_password = req["request"].form["password"]
+				g.parse("users.ttl", format="turtle")
+				for s,p,o in g.triples( (None, VOCAB.username, _usernameLiteral) ):
+					print s, p, o
+					return {"content": addHTML.render(logged = True, creationSuccess=False), "uri": createUserUrl}
+				g.add((URIRef("/"+slugify(_username)), VOCAB.username, _usernameLiteral))
+				g.add((URIRef("/"+slugify(_username)), VOCAB.password, Literal(_password)))
+				with open("users.ttl", "wb") as f:
+					f.write(g.serialize(format='turtle'))
+			except:
+				print sys.exc_info()
+				return {"content": "Can't write on users.ttl", "status": 500}
+			return {"content": addHTML.render(logged = True, creationSuccess=True), "uri": createUserUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def execute(self, req):
@@ -75,6 +98,7 @@ class Users:
 		logoutUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["logout_url"])
 		createUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["create_user"])
 		#Login
+		print req["url"]
 		if req["url"] == loginUrl:
 			return self._login(req, loginUrl)
 		#Logout
@@ -87,17 +111,18 @@ class Users:
 
 	def load_user(self, username, password):
 		self.users = {}
-		with open("users") as f:
-			for l in f.readlines():
-				(user, salt, p) = l.split(":")
-				self.users[user] = {"password": p, "salt": salt}
-		if username in self.users:
-			salt = self.users[username]["salt"]
-			hashedPassword = self.users[username]["password"].strip()
-			passHash = hashlib.sha512(salt+password.strip()).hexdigest()
-			if passHash == hashedPassword:
+		g = Graph()
+		try:
+			g.parse("users.ttl", format="turtle")
+			qres = g.query("""prefix vocab: <http://flod.info/>
+SELECT * WHERE {
+ ?u vocab:username "%s";
+    vocab:password "%s" .
+       }""" % (username, password))
+			for row in qres:
 				return True
-			return False
+		except:
+			print "Error loading users RDF graph"
 		return False
 
 

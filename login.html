@@ -86,12 +86,12 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Home</a></li>
+            <li><a href="/">Home</a></li>
             {%if logged == False%}
             <li class="active"><a href="login">Login</a></li>
             {%endif%}
    			{%if logged == True%}
-            <li class="active"><a href="logout">Logout</a></li>
+            <li><a href="logout">Logout</a></li>
             {%endif%}
           </ul>
         </div><!--/.nav-collapse -->
