@@ -66,10 +66,10 @@ def catch_all(path):
 			c = module.execute(response)
 			if not "mimetype" in c:
 				c["mimetype"] = "text/html"
-			if "status" in c:
-				if c["status"] >= 300 and c["status"] < 400:
-					return redirect(c["uri"], code=c["status"])
-			return Response(c["content"], mimetype=c["mimetype"])
+			status = c["status"] if "status" in c else 200
+			if status >= 300 and status < 400:
+				return redirect(c["uri"], code=status)
+			return Response(c["content"], mimetype=c["mimetype"]), status
 			break
 	return "Resource not found", 404
 
