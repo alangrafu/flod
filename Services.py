@@ -1,4 +1,4 @@
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SparqlEndpoint import SparqlEndpoint
 from jinja2 import Template
 from os import listdir, chdir, getcwd, walk
 from os.path import isfile, join, exists
@@ -7,6 +7,7 @@ from Namespace import Namespace
 import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
+from flask_login import session
 
 env = Environment()
 env.loader = FileSystemLoader('.')
@@ -20,19 +21,17 @@ class Services:
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
-		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
+		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
 		types = []
-		self.sparql.setQuery("""
+		results = self.sparql.query("""
     SELECT DISTINCT ?t
     WHERE {
     	<%s> a ?t
     }""" % (uri))
-		self.sparql.setReturnFormat(JSON)
-		results = self.sparql.query().convert()
 		for t in results["results"]["bindings"]:
 			types.append(t["t"]["value"])
 		return types
@@ -58,7 +57,7 @@ class Services:
 			onlyfiles = [ f for f in listdir(queryPath) if isfile(join(queryPath,f)) ]
 		except OSError:
 			print "Can't find path %s for queries. Aborting" % templatePath
-			return Response(response="Internal error\n\n", status=500)
+			onlyfiles = []
 		queries = {}
 		for filename in onlyfiles:
 				for root, dirs, files in walk(queryPath):
@@ -67,27 +66,23 @@ class Services:
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
-							try:
-								self.sparql = SPARQLWrapper(self.settings["endpoints"][currentEndpoint])
-							except:
-								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
-								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 							sparqlQuery = env.get_template("%s/%s"%(root, filename))
-							self.sparql.setQuery(sparqlQuery.render(uri=uri))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
 						except Exception, ex:
 							print sys.exc_info()
-							
-						self.sparql.setReturnFormat(JSON)
-						results = self.sparql.query().convert()
+							print ex
+							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
+
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 		chdir(currentDir)
 		try:
 			html = env.get_template("%s%s"%(templatePath, "html.template"))
 		except Exception:
-			return "Can't find html.template in %s"%templatePath
+			return {"content":"Can't find html.template in %s"%templatePath, "status": 500}
 			exit(3)
 		try:
-			out = html.render(queries=queries, uri=uri)
+			out = html.render(queries=queries, uri=uri, session=session)
 		except Exception:
-			return "Rendering problems"
+			print sys.exc_info()
+			return {"content": "Rendering problems", "status": 500}
 		return {"content": out, "mimetype": "text/html"}

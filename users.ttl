@@ -1,37 +1,16 @@
+@prefix flod: <http://flod.info/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix vocab: <http://flod.info/> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-</asdxzc> vocab:password "zxczxc" ;
-    vocab:username "asdxzc" .
+<file:///996e4e35d18511e3851f542696d57b35> a flod:User ;
+    flod:password "6e8a135aba85437dba98170cffafbd28c974dc2160cadd0b7f34341d" ;
+    flod:salt "84c948fb95904850a0b9d9100f72b787" ;
+    flod:username "admin" .
 
-<file:///Users/agraves/github/flod/users.ttl#1> a vocab:User ;
-    vocab:belongsToGroup <file:///group/admin/> ;
-    vocab:name "User A" ;
-    vocab:password "secret" ;
-    vocab:salt "asd" ;
-    vocab:sha1Pass "2f078ff4f34a3c1d59a3dd1eac85e629c92800814bb442e81aa366849e59f0088b880af3ab2e1ff1dfc2e5c15217044bec27b61a15d259a7fcb413e5067aa5e8" ;
-    vocab:username "admin" .
-
-<file:///alberto> vocab:password "asd 123 #$% 123" ;
-    vocab:username "álberto" .
-
-<file:///alvaro> vocab:password "cachupine" ;
-    vocab:username "alvaro" .
-
-<file:///alvaro2> vocab:password "asd" ;
-    vocab:username "alvaro2" .
-
-<file:///group/admin> a vocab:Group ;
-    vocab:forbiddenPattern "/null/" ;
-    vocab:name "Admin group" ;
-    vocab:permittedPattern "/admin/" .
-
-<file:///nico> vocab:password "robocop" ;
-    vocab:username "nico" .
-
-<file:///nico2> vocab:password "asdok;asd" ;
-    vocab:username "nico2" .
+<http://dbpedia.org/594566b5d18a11e3aa2f542696d57b35> a flod:User ;
+    flod:password "a50e6b8a2501bd9cb5e5db5d8ae233565d7bbc67bdc51161f40921e2" ;
+    flod:salt "4d41b486257e4148864a73826376d9b6" ;
+    flod:username "alvaro" .
 

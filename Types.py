@@ -1,4 +1,5 @@
-from SPARQLWrapper import SPARQLWrapper, JSON, XML
+from SparqlEndpoint import SparqlEndpoint
+from flask_login import session
 from accept import Accept
 from jinja2 import Template
 from os import listdir, walk, chdir, getcwd
@@ -19,19 +20,17 @@ class Types:
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
-		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
+		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
 		types = []
-		self.sparql.setQuery("""
+		results = self.sparql.query("""
     SELECT DISTINCT ?t
     WHERE {
     	<%s> a ?t
     }""" % (uri))
-		self.sparql.setReturnFormat(JSON)
-		results = self.sparql.query().convert()
 		for t in results["results"]["bindings"]:
 			types.append(t["t"]["value"])
 		return types
@@ -43,8 +42,7 @@ class Types:
 		"""Test if this module should take care of that URI"""
 		self.a = Accept()
 		uri = r["originUri"]
-		self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
-		self.sparql.setQuery("""
+		results = self.sparql.query("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?p ?o
     WHERE {
@@ -55,8 +53,6 @@ class Types:
     {?s ?p <%s>}
     }
 LIMIT 1""" % (uri, uri, uri))
-		self.sparql.setReturnFormat(JSON)
-		results = self.sparql.query().convert()
 		if len(results["results"]["bindings"]) > 0:
 			myUri = uri
 			if self.settings["mirrored"]== True:
@@ -108,18 +104,11 @@ LIMIT 1""" % (uri, uri, uri))
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
-							try:
-								self.sparql = SPARQLWrapper(self.settings["endpoints"][currentEndpoint])
-							except:
-								print "WARNING: No sparql endpoint %s found, using 'local' instead"%currentEndpoint
-								self.sparql = SPARQLWrapper(self.settings["endpoints"]["local"])
 							sparqlQuery = env.get_template("%s/%s"%(root, filename))
-							self.sparql.setQuery(sparqlQuery.render(uri=uri))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
 						except Exception, ex:
 							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
 							
-						self.sparql.setReturnFormat(JSON)
-						results = self.sparql.query().convert()
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 			chdir(currentDir)
 			try:

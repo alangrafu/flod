@@ -3,7 +3,7 @@
 {%block content%}
 
     <div class="container">
-     {%if logged == True%}
+     {%if "username" in session%}
      <div class="row">
       <div class="form-signin">
       <form action="logout" method="POST" role="form">

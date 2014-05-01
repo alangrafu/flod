@@ -1,11 +1,10 @@
 {%extends "components/includes/base.html"%}
-{%block content%}      
-  	<div class="container">
-    {%if "username" not in session%}
+{%block content%}
+    
 
-  		<form class="form-signin" role="form" action="login" method="post">
-  			<h2 class="form-signin-heading">Please sign in</h2>
-  			<legend>Login</legend>
+  	<div class="container">
+  		<form class="form-signin" role="form" action="createuser" method="post">
+  			<h2 class="form-signin-heading">Create a new user</h2>
 
   			<div class="form-group">
   				<label for="">Username</label>
@@ -16,11 +15,9 @@
   				<label for="">Password</label>
   				<input type="password" class="form-control" id="password" name="password" placeholder="Password">
   			</div>
-        
+
   			<button type="submit" class="btn btn-primary">Submit</button>
   		</form>
-}
-{%endif%}
   	</div>
   	<div class="row">
   		<div class="msg">
@@ -34,17 +31,26 @@
   				</div>
   			</div>
   			{%endif%}
-        {%if "username"  in session%}
-  			<div class="panel panel-info">
-  				<div class="panel-heading">
-  					<h3 class="panel-title">Logged in!</h3>
-  				</div>
-  				<div class="panel-body">
-  					Welcome!
-  				</div>
-  			</div>
-
-  			{%endif%}
+        {%if creationSuccess == True%}
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h3 class="panel-title">Success</h3>
+          </div>
+          <div class="panel-body">
+            User created successfully!
+          </div>
+        </div>
+        {%endif%}
+        {%if creationSuccess == False%}
+        <div class="panel panel-danger">
+          <div class="panel-heading">
+            <h3 class="panel-title">Error</h3>
+          </div>
+          <div class="panel-body">
+            User invalid or already exist
+          </div>
+        </div>
+        {%endif%} 
   		</div>
   	</div>
   </div>
