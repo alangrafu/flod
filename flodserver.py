@@ -79,5 +79,5 @@ def catch_all(path):
 
 
 if __name__ == "__main__":
-	app.secret_key = "A0Zr98j/3yXAAAAAR~XHH!jmN]LWX/,?RT"
+	app.secret_key = settings["secret"]
 	app.run(host=settings["host"], port=settings["port"], debug=settings["debug"] if "debug" in settings else False)

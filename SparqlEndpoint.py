@@ -29,5 +29,5 @@ class SparqlEndpoint(Singleton):
         try:
             return sparql.query().convert()
         except:
-            print "TR"
+            print "SparqlEndpoint problem"
             return None

@@ -7,6 +7,7 @@ COMPONENTS=$DIR/components
 VE=`which virtualenv`
 SETTINGS="settings.json"
 PORT=5001
+APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
 
 #Detecting neede tools
 
@@ -72,6 +73,7 @@ echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
 echo " 	\"port\": $PORT", >> $SETTINGS
+echo " 	\"secret\": \"$APPSECRET\"", >> $SETTINGS
 echo " 	\"root\": \"home\"" >> $SETTINGS
 echo "}" >> $SETTINGS
 
