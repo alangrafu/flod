@@ -3,7 +3,7 @@
   	<div class="container">
     {%if "username" not in session%}
 
-  		<form class="form-signin" role="form" action="login" method="post">
+  		<form class="form-signin" role="form" action="{{uri}}" method="post">
   			<h2 class="form-signin-heading">Please sign in</h2>
   			<legend>Login</legend>
 

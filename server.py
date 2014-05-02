@@ -1,3 +1,4 @@
+"""Main file"""
 from flask import Flask, redirect, request, Response
 app = Flask(__name__)
 import json
@@ -25,7 +26,6 @@ modules = []
 
 for mod in settings["modules"]:
 	try:
-		print "Loading ", mod
 		m = reload(__import__(mod))
 	except:
 		printerr("Can't import module '%s'. Aborting." % mod)
@@ -35,10 +35,8 @@ for mod in settings["modules"]:
 		modules.append(c(settings, app))
 	except AttributeError:
 		app.logger.warning("No operations!")
-	except:
-		print "Algo paso"
-print modules
 cachedDocuments = {}
+print modules
 
 
 @app.route("/")

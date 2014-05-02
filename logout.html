@@ -6,7 +6,7 @@
      {%if "username" in session%}
      <div class="row">
       <div class="form-signin">
-      <form action="logout" method="POST" role="form">
+      <form action="{{uri}}" method="POST" role="form">
           <legend>Are you sure you want to logout?</legend>    
 
           <button type="submit" class="btn btn-primary">Logout</button>

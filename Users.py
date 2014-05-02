@@ -18,83 +18,89 @@ env.loader = FileSystemLoader('.')
 class Users:
 	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser"}}
 	users = {}
-	asd = None
 	groups = {}
-	defaultPermission = False
+	defaultPermission = True  # True  forbids to continue
 	sparql = None
 	VOCAB = Namespace("http://flod.info/")
+	loginUrl = None
+	logoutUrl = None
+	createUserUrl = None
+	editUserUrl = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class. Check if login and logout have been redefined."""
 		for k in settings:
 			self.settings[k] = settings[k]
+
+		self.loginUrl = "/%s" % (self.settings["user_module"]["login_url"])
+		self.logoutUrl = "/%s" % (self.settings["user_module"]["logout_url"])
+		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
+		self.editUserUrl = "/admin/%s" % (self.settings["user_module"]["edit_user"])
 		self.sparql = SparqlEndpoint(settings)
 		g = Graph()
 		g.parse("users.ttl", format="turtle")
-		qres = g.query("""prefix vocab: <http://flod.info/>
-SELECT ?groupName ?pattern WHERE {
+		qres = g.query("""BASE <http://example.org/book/>
+
+			prefix vocab: <http://flod.info/>
+SELECT ?g ?groupName ?pattern WHERE {
 ?g a vocab:Group;
 vocab:name ?groupName;
 vocab:allowedPattern ?pattern .
 }""")
 
 		for row in qres:
-			_groupName = str(row["groupName"])
+			_groupName = str(row["groupName"]).lower()
 			_pattern = str(row["pattern"])
 			if _groupName not in self.groups.keys():
 				self.groups[_groupName] = []
 			self.groups[_groupName].append(_pattern)
+		print self.groups
 
 	def test(self, r):
-		loginUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["login_url"])
-		logoutUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["logout_url"])
-		createUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["create_user"])
-		editUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["edit_user"])
-		print "Comparing ", r["localUri"]
-		if r["localUri"] == createUserUrl:
-			return {"accepted": True, "url": createUserUrl}
-		if r["localUri"] == loginUrl:
-			return {"accepted": True, "url": r["localUri"]}
-		if r["localUri"] == logoutUrl:
-			return {"accepted": True, "url": logoutUrl}
-		if r["localUri"] == editUserUrl:
-			return {"accepted": True, "url": editUserUrl}
+		repl = self.settings['ns']['local']
+		localUri = str(r["localUri"].replace(repl, "/", 1))
+		myGroups = ["anonymous"]
 		if "username" in session:
-			return {"accepted": False, "url": loginUrl}
-		if self._groupPermission(session["groups"], r["localUri"]):
-			return {"accepted": True, "url": loginUrl}
-		return {"accepted": self.defaultPermission, "url": r["localUri"]}
+			myGroups = session["groups"]
+		if self._groupPermission(myGroups, localUri):
+			print "Aceptado", localUri
+			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl:
+				return {"accepted": True, "url": r["localUri"], "permission": True}
+			return {"accepted": False, "url": r["localUri"], "permission": True}
+		return {"accepted": True, "url": r["localUri"], "status": 406, "permission": False}
 
 	def _groupPermission(self, groups, url):
+		print groups, self.groups
 		for g in groups:
 			if g not in self.groups:
 				continue
 			for u in self.groups[g]:
+				print u, url, re.search(u, url)
 				if re.search(u, url) is not None:
 					return True
-		return self.defaultPermission
+		return False
 
 	def _login(self, req, loginUrl):
 		loginHTML = None
 		loginHTML = env.get_template("login.html")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
-				return {"content": loginHTML.render(session=session), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, uri=loginUrl), "uri": loginUrl}
 			else:
-				return {"content": loginHTML.render(session=session, loginError=False), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, loginError=False, uri=loginUrl), "uri": loginUrl}
 		if req["request"].method == "POST":
 			_username = req["request"].form["username"]
 			_password = req["request"].form["password"]
 			if "username" in session and _username == session["username"]:
-				return {"content": loginHTML.render(session=session), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, uri=loginUrl), "uri": req["url"]}
 			loadedResult = self._load_user(_username, _password)
 			if loadedResult["result"]:
 				session["uri"] = loadedResult["uri"]
 				session["salt"] = loadedResult["salt"]
 				session["username"] = _username
 				session["groups"] = loadedResult["groups"]
-				return {"content": loginHTML.render(session=session), "uri": loginUrl}
-			return {"content": loginHTML.render(session=session, loginError=True), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session), "uri": req["url"]}
+			return {"content": loginHTML.render(session=session, loginError=True), "uri": req["url"]}
 		return {"content": "Invalid method", "status": 406}
 
 	def _logout(self, req, logoutUrl):
@@ -105,10 +111,10 @@ vocab:allowedPattern ?pattern .
 				return {"content": logoutHTML.render(session=session), "uri": logoutUrl}
 			if req["request"].method == "POST":
 				session.clear()
-				return {"content": logoutHTML.render(session=session), "uri": "/"}
+				return {"content": logoutHTML.render(session=session), "uri": logoutUrl}
 		else:
-			return {"content": "Redirecting", "uri": "/", "status": 303}
-		return {"content": "Redirecting", "uri": "/", "status": 303}
+			return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
+		return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
 
 	def _createUser(self, req, createUserUrl):
 		MYNS = Namespace(self.settings["ns"]["origin"]) if self.settings["mirrored"] else Namespace(self.settings["ns"]["local"])
@@ -187,25 +193,22 @@ vocab:allowedPattern ?pattern .
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
-		loginUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["login_url"])
-		logoutUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["logout_url"])
-		createUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["create_user"])
-		editUserUrl = "%s%s" % (self.settings["ns"]["local"], self.settings["user_module"]["edit_user"])
-		# Login
-		print req["url"]
-		if req["url"] == loginUrl:
-			return self._login(req, loginUrl)
-		# Logout
-		if req["url"] == logoutUrl:
-			return self._logout(req, logoutUrl)
-		# Create user
-		if req["url"] == createUserUrl:
-			return self._createUser(req, createUserUrl)
-		# Edit user
-		if req["url"] == editUserUrl and "username" in session:
-			return self._editUser(req, editUserUrl)
-
-		return {"content": "login", "uri": loginUrl, "status": 303}
+		repl = self.settings['ns']['local']
+		localUri = req["url"].replace(repl, "/", 1)
+		if "permission" not in req or req["permission"] is True:
+			# Login
+			if localUri == self.loginUrl:
+				return self._login(req, self.loginUrl)
+			# Logout
+			if localUri == self.logoutUrl:
+				return self._logout(req, self.logoutUrl)
+			# Create user
+			if localUri == self.createUserUrl:
+				return self._createUser(req, self.createUserUrl)
+			# Edit user
+			if localUri == self.editUserUrl and "username" in session:
+				return self._editUser(req, self.editUserUrl)
+		return {"content": "You are not authorized to access this resource.%s" % req["url"], "url": req["url"], "status": 400}
 
 	def _load_user(self, username, password):
 		self.users = {}
@@ -224,12 +227,12 @@ vocab:password ?p .
 					# get groups
 					_groups = []
 					q = g.query("""prefix vocab: <http://flod.info/>
-SELECT ?groupNames WHERE {
+SELECT ?groupName WHERE {
 ?u vocab:group ?g .
 ?g vocab:name ?groupName.
 }""")
 					for rrow in q:
-						_groups.append(str(rrow["groupNames"]))
+						_groups.append(str(rrow["groupName"]).lower())
 					return {"result": True, "uri": str(row["u"]), "salt": str(row["s"]), "groups": _groups}
 		except:
 			print "Error loading users RDF graph"

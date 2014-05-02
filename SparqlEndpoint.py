@@ -1,16 +1,19 @@
+"""Class in charge of managing the SPARQL Endpoints"""
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
 class Singleton(object):
+    """Base singleton class"""
     _instance = None
 
-    def __new__(class_, *args, **kwargs):
-        if not isinstance(class_._instance, class_):
-            class_._instance = object.__new__(class_, *args, **kwargs)
-        return class_._instance
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls, *args, **kwargs)
+        return cls._instance
 
 
 class SparqlEndpoint(Singleton):
+    """Class in charge of managing the SPARQL Endpoints"""
     endpoints = {}
     settings = {}
 
