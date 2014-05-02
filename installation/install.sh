@@ -60,7 +60,7 @@ if [ -e $SETTINGS ]; then
 fi
 
 echo "{" >> $SETTINGS
-echo " 	\"modules\": [ \"Static\", \"Services\", \"Types\"]," >> $SETTINGS
+echo " 	\"modules\": [ \"Static\", \"Users\", \"Services\", \"Types\"]," >> $SETTINGS
 echo " 	\"ns\": {" >> $SETTINGS
 echo " 		\"local\": \"$baseUrl/\"," >> $SETTINGS
 echo " 		\"origin\": \"$ns/\"" >> $SETTINGS
@@ -72,7 +72,7 @@ echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
 echo " 	\"port\": $PORT", >> $SETTINGS
-echo " 	\"root\": \"index.html\"" >> $SETTINGS
+echo " 	\"root\": \"home\"" >> $SETTINGS
 echo "}" >> $SETTINGS
 
 
