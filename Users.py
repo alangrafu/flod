@@ -208,7 +208,7 @@ vocab:allowedPattern ?pattern .
 			# Edit user
 			if localUri == self.editUserUrl and "username" in session:
 				return self._editUser(req, self.editUserUrl)
-		return {"content": "You are not authorized to access this resource.%s" % req["url"], "url": req["url"], "status": 400}
+		return {"content": "You are not authorized to access this resource.%s" % req["url"], "url": req["url"], "status": 403}
 
 	def _load_user(self, username, password):
 		self.users = {}
