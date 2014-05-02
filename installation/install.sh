@@ -102,7 +102,7 @@ $PIP -q install -r $REQ
 echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh
 echo "source $VE_DIR/bin/activate" >> start.sh
-echo "python server.py" >> start.sh
+echo "python flodserver.py" >> start.sh
 echo "deactivate" >> start.sh
 
 deactivate
