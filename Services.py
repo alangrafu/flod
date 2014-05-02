@@ -56,7 +56,7 @@ class Services:
 		try:
 			onlyfiles = [ f for f in listdir(queryPath) if isfile(join(queryPath,f)) ]
 		except OSError:
-			print "Can't find path %s for queries. Aborting" % templatePath
+			print "Warning: Can't find path %s for queries." % templatePath
 			onlyfiles = []
 		queries = {}
 		for filename in onlyfiles:

@@ -7,10 +7,15 @@
 <file:///996e4e35d18511e3851f542696d57b35> a flod:User ;
     flod:password "6e8a135aba85437dba98170cffafbd28c974dc2160cadd0b7f34341d" ;
     flod:salt "84c948fb95904850a0b9d9100f72b787" ;
+    flod:group </admin> ;
     flod:username "admin" .
 
 <http://dbpedia.org/594566b5d18a11e3aa2f542696d57b35> a flod:User ;
     flod:password "a50e6b8a2501bd9cb5e5db5d8ae233565d7bbc67bdc51161f40921e2" ;
     flod:salt "4d41b486257e4148864a73826376d9b6" ;
     flod:username "alvaro" .
+
+</admin> a flod:Group;
+         flod:name "Admin Group";
+         flod:allowedPattern "" .
 

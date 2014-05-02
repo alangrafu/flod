@@ -13,10 +13,12 @@ from jinja2.environment import Environment
 env = Environment()
 env.loader = FileSystemLoader('.')
 
+
 class Types:
 	settings = {}
 	sparql = None
 	a = None
+
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
@@ -27,10 +29,10 @@ class Types:
 		"""Returns the types of a URI"""
 		types = []
 		results = self.sparql.query("""
-    SELECT DISTINCT ?t
-    WHERE {
-    	<%s> a ?t
-    }""" % (uri))
+SELECT DISTINCT ?t
+WHERE {
+<%s> a ?t
+}""" % (uri))
 		for t in results["results"]["bindings"]:
 			types.append(t["t"]["value"])
 		return types
@@ -43,19 +45,19 @@ class Types:
 		self.a = Accept()
 		uri = r["originUri"]
 		results = self.sparql.query("""
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    SELECT ?p ?o
-    WHERE {
-    {<%s> ?p ?o}
-    UNION
-    {?s <%s> ?o}
-    UNION
-    {?s ?p <%s>}
-    }
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?p ?o
+WHERE {
+{<%s> ?p ?o}
+UNION
+{?s <%s> ?o}
+UNION
+{?s ?p <%s>}
+}
 LIMIT 1""" % (uri, uri, uri))
 		if len(results["results"]["bindings"]) > 0:
 			myUri = uri
-			if self.settings["mirrored"]== True:
+			if self.settings["mirrored"] is True:
 				myUri = uri.replace(self.settings["ns"]["origin"], self.settings["ns"]["local"])
 			extension = self.a.getExtension(r["mimetype"])
 			types = self.__getResourceType(uri)
@@ -64,7 +66,7 @@ LIMIT 1""" % (uri, uri, uri))
 				curiedTypes.append(self.ns.uri2curie(t))
 			response = r
 			response["accepted"] = True
-			response["url"] = "%s.%s"%(myUri, extension)
+			response["url"] = "%s.%s" % (myUri, extension)
 			response["types"] = curiedTypes
 			return response
 		return {"accepted": False}
@@ -86,16 +88,16 @@ LIMIT 1""" % (uri, uri, uri))
 						templatePath = "components/types/%s/" % tDir
 						break
 			try:
-				onlyfiles = [ f for f in listdir(queryPath) if isfile(join(queryPath,f)) ]
+				onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f))]
 			except OSError, e:
 				print "Can't find path %s for queries. Aborting" % templatePath
 				return Response(response="Internal error\n\n", status=500)
 
 			queries = {}
-			try:				
-				html = env.get_template("%s%s"%(templatePath, "html.template"))
+			try:
+				html = env.get_template("%s%s" % (templatePath, "html.template"))
 			except Exception:
-				return {"content": "Can't find html.template in %s"%templatePath, "status": 500}
+				return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
 
 			for filename in onlyfiles:
 				for root, dirs, files in walk(queryPath):
@@ -104,20 +106,20 @@ LIMIT 1""" % (uri, uri, uri))
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
-							sparqlQuery = env.get_template("%s/%s"%(root, filename))
+							sparqlQuery = env.get_template("%s/%s" % (root, filename))
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
 						except Exception, ex:
-							print "\n\nCANNOT OPEN FILE %s/%s"%(root, filename)
-							
+							print "\n\nCANNOT OPEN FILE %s/%s" % (root, filename)
+
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 			chdir(currentDir)
 			try:
 				out = html.render(queries=queries, uri=uri)
 			except Exception:
-				return {"content":"Rendering problems", "status":500}
-			return {"content":out}
+				return {"content": "Rendering problems", "status": 500}
+			return {"content": out}
 		else:
-			#Try to find .construct query first
+			# Try to find .construct query first
 			try:
 				queryPath = "components/types/rdfs__Resource/queries/main.construct"
 				if(len(req["types"]) > 0):
@@ -129,16 +131,16 @@ LIMIT 1""" % (uri, uri, uri))
 							break
 				sparqlQuery = env.get_template(queryPath)
 				self.sparql.setQuery(sparqlQuery.render(uri=uri))
-			#If not found, use a generic CONSTRUCT query
+			# If not found, use a generic CONSTRUCT query
 			except Exception, e:
 				self.sparql.setQuery("""
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    CONSTRUCT {<%s>  ?p ?o}
-    WHERE { <%s> ?p ?o }
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+CONSTRUCT {<%s>  ?p ?o}
+WHERE { <%s> ?p ?o }
 LIMIT 100""" % (uri, uri))
-		#self.sparql.setQuery(query)
+		# self.sparql.setQuery(query)
 			self.sparql.setReturnFormat(XML)
-		#self.sparql.setReturnFormat(JSON)
+		# self.sparql.setReturnFormat(JSON)
 			results = self.sparql.query().convert()
 			r = results.serialize(format=self.a.getConversionType(req["mimetype"]))
 		return {"content": r, "mimetype": "text/turtle"}
