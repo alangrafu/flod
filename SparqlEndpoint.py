@@ -1,5 +1,6 @@
 """Class in charge of managing the SPARQL Endpoints"""
 from SPARQLWrapper import SPARQLWrapper, JSON
+import sys
 
 
 class Singleton(object):
@@ -27,7 +28,17 @@ class SparqlEndpoint(Singleton):
         sparql.setQuery(q)
         sparql.setReturnFormat(JSON)
         try:
-            return sparql.query().convert()
+            results = sparql.query().convert()
+            try:
+                if self.settings["mirrored"] is True:
+                    for row in results["results"]["bindings"]:
+                        for elem in row:
+                            if row[elem]["type"] == "uri":
+                                row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
+            except:
+                print sys.exc_info()
+                print "Error iterating results"
+            return results
         except:
             print "SparqlEndpoint problem"
             return None
