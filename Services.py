@@ -18,6 +18,7 @@ class Services:
 	basedir = "components/services/"
 	sparql = None
 	a = None
+
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
@@ -28,10 +29,10 @@ class Services:
 		"""Returns the types of a URI"""
 		types = []
 		results = self.sparql.query("""
-    SELECT DISTINCT ?t
-    WHERE {
-    	<%s> a ?t
-    }""" % (uri))
+SELECT DISTINCT ?t
+WHERE {
+<%s> a ?t
+}""" % (uri))
 		for t in results["results"]["bindings"]:
 			types.append(t["t"]["value"])
 		return types
@@ -41,7 +42,7 @@ class Services:
 
 	def test(self, r):
 		file = r["localUri"].replace(self.settings["ns"]["local"], "", 1)
-		if exists(self.basedir+file):
+		if exists(self.basedir + file):
 			return {"accepted": True, "url": r["localUri"]}
 		return {"accepted": False}
 
@@ -49,12 +50,12 @@ class Services:
 		"""Serves a URI, given that the test method returned True"""
 		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
 		currentDir = getcwd()
-		service = self.basedir+file
+		service = self.basedir + file
 		uri = req["url"]
-		queryPath = "%s/queries/"%service
+		queryPath = "%s/queries/" % service
 		templatePath = "%s/" % service
 		try:
-			onlyfiles = [ f for f in listdir(queryPath) if isfile(join(queryPath,f)) ]
+			onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f))]
 		except OSError:
 			print "Warning: Can't find path %s for queries." % templatePath
 			onlyfiles = []
@@ -66,7 +67,7 @@ class Services:
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
-							sparqlQuery = env.get_template("%s/%s"%(root, filename))
+							sparqlQuery = env.get_template("%s/%s" % (root, filename))
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
 						except Exception, ex:
 							print sys.exc_info()
@@ -76,9 +77,9 @@ class Services:
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 		chdir(currentDir)
 		try:
-			html = env.get_template("%s%s"%(templatePath, "html.template"))
+			html = env.get_template("%s%s" % (templatePath, "html.template"))
 		except Exception:
-			return {"content":"Can't find html.template in %s"%templatePath, "status": 500}
+			return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
 			exit(3)
 		try:
 			out = html.render(queries=queries, uri=uri, session=session)
