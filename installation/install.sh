@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+GIT=$(which git)
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
 COMPONENTS=$DIR/components
@@ -116,7 +116,16 @@ if [ -e "$COMPONENTS" ]; then
 	echo "WARNING! Components folder already exist. Installation WILL NOT OVERRIDE IT"
 else
 	echo "Copying default components"
-	cp -r installation/defaultComponents $COMPONENTS
+	mkdir $COMPONENTS
+	if [ $GIT == "" ]; then
+		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
+	else
+		echo "Creating git repository with default components"
+		cd $COMPONENTS
+		$GIT init
+		cd ..
+	fi
+	cp -r installation/defaultComponents/* $COMPONENTS
 fi
 
 
