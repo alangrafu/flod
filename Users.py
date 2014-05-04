@@ -26,6 +26,7 @@ class Users:
 	logoutUrl = None
 	createUserUrl = None
 	editUserUrl = None
+	flod = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class. Check if login and logout have been redefined."""
@@ -37,6 +38,8 @@ class Users:
 		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
 		self.editUserUrl = "/admin/%s" % (self.settings["user_module"]["edit_user"])
 		self.sparql = SparqlEndpoint(settings)
+		self.flod = self.settings["flod"] if "flod" in self.settings else None
+
 		g = Graph()
 		g.parse("users.ttl", format="turtle")
 		qres = g.query("""BASE <http://example.org/book/>
@@ -54,7 +57,6 @@ vocab:allowedPattern ?pattern .
 			if _groupName not in self.groups.keys():
 				self.groups[_groupName] = []
 			self.groups[_groupName].append(_pattern)
-		print self.groups
 
 	def test(self, r):
 		repl = self.settings['ns']['local']
@@ -63,19 +65,16 @@ vocab:allowedPattern ?pattern .
 		if "username" in session:
 			myGroups = session["groups"]
 		if self._groupPermission(myGroups, localUri):
-			print "Aceptado", localUri
 			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl:
 				return {"accepted": True, "url": r["localUri"], "permission": True}
 			return {"accepted": False, "url": r["localUri"], "permission": True}
 		return {"accepted": True, "url": r["localUri"], "status": 406, "permission": False}
 
 	def _groupPermission(self, groups, url):
-		print groups, self.groups
 		for g in groups:
 			if g not in self.groups:
 				continue
 			for u in self.groups[g]:
-				print u, url, re.search(u, url)
 				if re.search(u, url) is not None:
 					return True
 		return False
@@ -85,22 +84,22 @@ vocab:allowedPattern ?pattern .
 		loginHTML = env.get_template("login.html")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
-				return {"content": loginHTML.render(session=session, uri=loginUrl), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, uri=loginUrl, flod=self.flod), "uri": loginUrl}
 			else:
-				return {"content": loginHTML.render(session=session, loginError=False, uri=loginUrl), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, loginError=False, uri=loginUrl, flod=self.flod), "uri": loginUrl}
 		if req["request"].method == "POST":
 			_username = req["request"].form["username"]
 			_password = req["request"].form["password"]
 			if "username" in session and _username == session["username"]:
-				return {"content": loginHTML.render(session=session, uri=loginUrl), "uri": req["url"]}
+				return {"content": loginHTML.render(session=session, uri=loginUrl, flod=self.flod), "uri": req["url"]}
 			loadedResult = self._load_user(_username, _password)
 			if loadedResult["result"]:
 				session["uri"] = loadedResult["uri"]
 				session["salt"] = loadedResult["salt"]
 				session["username"] = _username
 				session["groups"] = loadedResult["groups"]
-				return {"content": loginHTML.render(session=session), "uri": req["url"]}
-			return {"content": loginHTML.render(session=session, loginError=True), "uri": req["url"]}
+				return {"content": loginHTML.render(session=session, flod=self.flod), "uri": req["url"]}
+			return {"content": loginHTML.render(session=session, loginError=True, flod=self.flod), "uri": req["url"]}
 		return {"content": "Invalid method", "status": 406}
 
 	def _logout(self, req, logoutUrl):
@@ -120,7 +119,7 @@ vocab:allowedPattern ?pattern .
 		MYNS = Namespace(self.settings["ns"]["origin"]) if self.settings["mirrored"] else Namespace(self.settings["ns"]["local"])
 		addHTML = env.get_template("adduser.html")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": addHTML.render(session=session), "uri": createUserUrl}
+				return {"content": addHTML.render(session=session, flod=self.flod), "uri": createUserUrl}
 		if req["request"].method == "POST":
 			# if "username" not in session:
 			# return {"content": addHTML.render(session=session, creationError=True), "uri": createUserUrl}
@@ -133,7 +132,7 @@ vocab:allowedPattern ?pattern .
 				g.parse("users.ttl", format="turtle")
 				for s, p, o in g.triples((None, self.VOCAB.username, _usernameLiteral)):
 					print s, p, o
-					return {"content": addHTML.render(session=session, creationSuccess=False), "uri": createUserUrl}
+					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod), "uri": createUserUrl}
 				g.add((MYNS[slugify(_username)], RDF["type"], self.VOCAB["User"]))
 				g.add((MYNS[slugify(_username)], self.VOCAB.username, _usernameLiteral))
 				g.add((MYNS[slugify(_username)], self.VOCAB.salt, Literal(_salt)))
@@ -143,7 +142,7 @@ vocab:allowedPattern ?pattern .
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
-			return {"content": addHTML.render(session=session, creationSuccess=True), "uri": createUserUrl}
+			return {"content": addHTML.render(session=session, creationSuccess=True, flod=self.flod), "uri": createUserUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def _editUser(self, req, editUserUrl):
@@ -157,14 +156,14 @@ vocab:allowedPattern ?pattern .
 				for s, p, o in g.triples((URIRef(session["uri"]), self.VOCAB.username, None)):
 					data["username"] = str(o)
 					print data
-					return {"content": editHTML.render(session=session, data=data, creationSuccess=None), "uri": editUserUrl}
-				return {"content": addHTML.render(session=session), "uri": "/"}
+					return {"content": editHTML.render(session=session, data=data, creationSuccess=None, flod=self.flod), "uri": editUserUrl}
+				return {"content": addHTML.render(session=session, flod=self.flod), "uri": "/"}
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
 		if req["request"].method == "POST":
 			if "username" not in session:
-				return {"content": addHTML.render(session=session, creationError=True), "uri": createUserUrl}
+				return {"content": addHTML.render(session=session, creationError=True, flod=self.flod), "uri": createUserUrl}
 			g = Graph()
 			try:
 				_username = req["request"].form["username"]
@@ -188,13 +187,15 @@ vocab:allowedPattern ?pattern .
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
-			return {"content": editHTML.render(session=session, editionSuccess=True, data=session)}
+			return {"content": editHTML.render(session=session, editionSuccess=True, data=session, flod=self.flod)}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		repl = self.settings['ns']['local']
 		localUri = req["url"].replace(repl, "/", 1)
+		flod = self.settings["flod"] if "flod" in self.settings else None
+
 		if "permission" not in req or req["permission"] is True:
 			# Login
 			if localUri == self.loginUrl:

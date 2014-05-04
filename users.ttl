@@ -5,20 +5,38 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <file:///996e4e35d18511e3851f542696d57b35> a flod:User ;
+    flod:group <file:///admin> ;
     flod:password "6e8a135aba85437dba98170cffafbd28c974dc2160cadd0b7f34341d" ;
     flod:salt "84c948fb95904850a0b9d9100f72b787" ;
-    flod:group </admin> ;
     flod:username "admin" .
+
+<file:///anonymous> a flod:Group ;
+    flod:allowedPattern "/home",
+        "/login" ;
+    flod:name "Anonymous" .
+
+</clients> a flod:Group;
+    flod:allowedPattern "/home", "/facets", "/compraspublicas/*";
+    flod:name "Clients" .
+
+<http://cognita.io/1847f9ebd32111e38af0542696d57b35> a flod:User ;
+    flod:password "4b691c8b16cc9bc7c49b2a40d4d588beba2301cca66047e47a04d025" ;
+    flod:salt "03d17b9eab634794ac95ed399f6e6faa" ;
+    flod:group </clients>;
+    flod:username "nloira" .
+
+<http://cognita.io/1dd7fd23d32111e3b966542696d57b35> a flod:User ;
+    flod:password "fa1ca5f53d22f5a458ed17072534749eb27a039ebfdf80c3c93cc31e" ;
+    flod:salt "2a915f5d39b24ec8952d82bbb816a07e" ;
+    flod:group </clients>;
+    flod:username "ynowogro" .
 
 <http://dbpedia.org/594566b5d18a11e3aa2f542696d57b35> a flod:User ;
     flod:password "a50e6b8a2501bd9cb5e5db5d8ae233565d7bbc67bdc51161f40921e2" ;
     flod:salt "4d41b486257e4148864a73826376d9b6" ;
     flod:username "alvaro" .
 
-</admin> a flod:Group;
-         flod:name "Admin Group";
-         flod:allowedPattern "" .
-</anonymous> a flod:Group;
-         flod:name "Anonymous";
-         flod:allowedPattern "/home", "/login" .
+<file:///admin> a flod:Group ;
+    flod:allowedPattern "" ;
+    flod:name "Admin Group" .
 

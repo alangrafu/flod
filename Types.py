@@ -1,11 +1,10 @@
-from SparqlEndpoint import SparqlEndpoint
 from flask_login import session
 from accept import Accept
 from jinja2 import Template
 from os import listdir, walk, chdir, getcwd
 from os.path import isfile, join, exists
 from flask import Response
-from Namespace import Namespace
+from Utils import Namespace, SparqlEndpoint
 import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
@@ -18,12 +17,14 @@ class Types:
 	settings = {}
 	sparql = None
 	a = None
+	flod = None	
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
 		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
+		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
@@ -62,8 +63,11 @@ LIMIT 1""" % (uri, uri, uri))
 			extension = self.a.getExtension(r["mimetype"])
 			types = self.__getResourceType(uri)
 			curiedTypes = []
+			print "Types"
 			for t in types:
+				print t
 				curiedTypes.append(self.ns.uri2curie(t))
+				print self.ns.uri2curie(t)
 			response = r
 			response["accepted"] = True
 			response["url"] = "%s.%s" % (myUri, extension)
@@ -97,6 +101,7 @@ LIMIT 1""" % (uri, uri, uri))
 			try:
 				html = env.get_template("%s%s" % (templatePath, "html.template"))
 			except Exception:
+				print sys.exc_info()
 				return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
 
 			for filename in onlyfiles:
@@ -107,15 +112,17 @@ LIMIT 1""" % (uri, uri, uri))
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
 						except Exception, ex:
+							print sys.exc_info()
 							print "\n\nCANNOT OPEN FILE %s/%s" % (root, filename)
 
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 			chdir(currentDir)
 			try:
-				out = html.render(queries=queries, uri=uri)
+				out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
 			except Exception:
+				print sys.exc_info()
 				return {"content": "Rendering problems", "status": 500}
 			return {"content": out}
 		else:
@@ -130,7 +137,7 @@ LIMIT 1""" % (uri, uri, uri))
 							queryPath = aux
 							break
 				sparqlQuery = env.get_template(queryPath)
-				self.sparql.setQuery(sparqlQuery.render(uri=uri))
+				self.sparql.setQuery(sparqlQuery.render(uri=uri, flod=self.flod))
 			# If not found, use a generic CONSTRUCT query
 			except Exception, e:
 				self.sparql.setQuery("""

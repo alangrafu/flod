@@ -1,4 +1,6 @@
-from SparqlEndpoint import SparqlEndpoint
+"""Util classes."""
+
+from Utils import SparqlEndpoint
 from jinja2 import Template
 from os import listdir, chdir, getcwd, walk
 from os.path import isfile, join, exists
@@ -17,13 +19,14 @@ class Services:
 	settings = {}
 	basedir = "components/services/"
 	sparql = None
-	a = None
+	flod = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
 		self.settings = settings
 		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
+		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
@@ -68,7 +71,7 @@ WHERE {
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
@@ -82,7 +85,7 @@ WHERE {
 			return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
 			exit(3)
 		try:
-			out = html.render(queries=queries, uri=uri, session=session)
+			out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
 		except Exception:
 			print sys.exc_info()
 			return {"content": "Rendering problems", "status": 500}
