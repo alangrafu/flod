@@ -41,7 +41,9 @@ class SparqlEndpoint(Singleton):
             try:
                 if self.settings["mirrored"] is True:
                     for row in results["results"]["bindings"]:
-                        for elem in row:
+                        for elem in results["head"]["vars"]:
+                            if elem not in row:
+                                row[elem] = {}                                
                             if row[elem]["type"] == "uri":
                                 row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
                                 row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
