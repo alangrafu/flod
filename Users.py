@@ -107,10 +107,10 @@ vocab:allowedPattern ?pattern .
 		logoutHTML = env.get_template("logout.html")
 		if "username" in session:
 			if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": logoutHTML.render(session=session), "uri": logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": logoutUrl}
 			if req["request"].method == "POST":
 				session.clear()
-				return {"content": logoutHTML.render(session=session), "uri": logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": logoutUrl}
 		else:
 			return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
 		return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
@@ -229,9 +229,10 @@ vocab:password ?p .
 					_groups = []
 					q = g.query("""prefix vocab: <http://flod.info/>
 SELECT ?groupName WHERE {
-?u vocab:group ?g .
+?u vocab:group ?g ;
+   vocab:username "%s".
 ?g vocab:name ?groupName.
-}""")
+}"""% (username))
 					for rrow in q:
 						_groups.append(str(rrow["groupName"]).lower())
 					return {"result": True, "uri": str(row["u"]), "salt": str(row["s"]), "groups": _groups}
