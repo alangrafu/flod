@@ -55,14 +55,14 @@ class JsonBasedWriter:
 		"""Serves a URI, given that the test method returned True"""
 		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
 		currentDir = getcwd()
-		service = self.basedir + file
+		jsonService = self.basedir + file
 		uri = req["url"]
-		queryPath = "%s/queries/" % service
-		templatePath = "%s/" % service
+		queryPath = "%s/queries/" % jsonService
+		updatePath = "%s/" % jsonService
 		try:
-			onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f))]
+			onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f)) and str(f).endswith(".query")]
 		except OSError:
-			print "Warning: Can't find path %s for queries." % templatePath
+			print "Warning: Can't find path %s for queries." % updatePath
 			onlyfiles = []
 		queries = {}
 		for filename in onlyfiles:
@@ -82,15 +82,13 @@ class JsonBasedWriter:
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 		chdir(currentDir)
 		try:
-			query = env.get_template("%s%s" % (templatePath, "update.query"))
-		except Exception:
-			return {"content": "Can't find update.query in %s" % templatePath, "status": 500}
-			exit(3)
-		try:
-			out = query.render(queries=queries, uri=uri, session=session, flod=self.flod)
-			self._update(out)
+			updatefiles = [f for f in listdir(updatePath) if isfile(join(updatePath, f)) and str(f).endswith(".update")]
+			for updatefile in updatefiles:
+				query = env.get_template(join(updatePath, updatefile))
+				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod)
+				self._update(out)
 		except Exception:
 			print sys.exc_info()
-			return {"content": "Rendering problems", "status": 500}
-		return {"content": out, "mimetype": "text/html"}
+			return {"content": "{\"success\": false}", "status": 500, "mimetype": "application/json"}
+		return {"content": "{\"success\": true}", "mimetype": "application/json"}
 
