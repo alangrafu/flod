@@ -71,13 +71,16 @@ WHERE {
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
+							print sparqlQuery.render(uri=uri, session=session, flod=self.flod)
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
 							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
-
-						queries[filename.replace(".query", "")] = results["results"]["bindings"]
+						try:
+							queries[filename.replace(".query", "")] = results["results"]["bindings"]
+						except:
+							continue
 		chdir(currentDir)
 		try:
 			html = env.get_template("%s%s" % (templatePath, "html.template"))
