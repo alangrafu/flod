@@ -54,6 +54,9 @@ class JsonBasedWriter:
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
+		if req["request"].form is None:
+			return {"content": "{\"success\": false}", "status": 500, "mimetype": "application/json"}
+		data = req["request"].form
 		currentDir = getcwd()
 		jsonService = self.basedir + file
 		uri = req["url"]
@@ -73,7 +76,7 @@ class JsonBasedWriter:
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, data=data))
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
@@ -85,7 +88,7 @@ class JsonBasedWriter:
 			updatefiles = [f for f in listdir(updatePath) if isfile(join(updatePath, f)) and str(f).endswith(".update")]
 			for updatefile in updatefiles:
 				query = env.get_template(join(updatePath, updatefile))
-				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod)
+				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod, data=data)
 				self._update(out)
 		except Exception:
 			print sys.exc_info()
