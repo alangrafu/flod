@@ -1,6 +1,6 @@
-from SparqlEndpoint import SparqlEndpoint
 from flask_login import session, redirect, url_for
 from jinja2 import Template
+from Utils import SparqlEndpoint
 import hashlib
 import re
 import uuid
