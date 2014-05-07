@@ -8,6 +8,7 @@ VE=`which virtualenv`
 SETTINGS="settings.json"
 PORT=5001
 APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
+GITREPO=""
 
 #Detecting neede tools
 
@@ -118,15 +119,23 @@ chmod +x start.sh
 if [ -e "$COMPONENTS" ]; then
 	echo "WARNING! Components folder already exist. Installation WILL NOT OVERRIDE IT"
 else
+        
 	echo "Copying default components"
-	mkdir $COMPONENTS
 	if [ $GIT == "" ]; then
 		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
+		cp -r installation/defaultComponents $COMPONENTS
 	else
-		echo "Creating git repository with default components"
-		cd $COMPONENTS
-		$GIT init
-		cd ..
+		echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
+		read -u 1 GITREPO
+		if [ $GITREPO != "" ]; then
+			$GIT clone $GITREPOi $COMPONENTS
+                else        
+ 			echo "Creating a brand new repository with default components"
+			mkdir $COMPONENTS
+			cd $COMPONENTS
+			cp -r installation/defaultComponents/* $COMPONENTS
+			$GIT init
+			cd ..
 	fi
 	cp -r installation/defaultComponents/* $COMPONENTS
 fi
