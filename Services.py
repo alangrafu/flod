@@ -1,11 +1,10 @@
 """Util classes."""
 
-from Utils import SparqlEndpoint
+from Utils import SparqlEndpoint, Namespace
 from jinja2 import Template
 from os import listdir, chdir, getcwd, walk
 from os.path import isfile, join, exists
 from flask import Response
-from Namespace import Namespace
 import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment

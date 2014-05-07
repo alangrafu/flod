@@ -3,7 +3,7 @@
 GIT=$(which git)
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
-COMPONENTS=$DIR/components
+COMPONENTS=components
 VE=`which virtualenv`
 SETTINGS="settings.json"
 PORT=5001
@@ -75,8 +75,8 @@ echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
 echo " 	\"port\": $PORT", >> $SETTINGS
 echo " 	\"flod\": { #Here you can add custom variables", >> $SETTINGS
-echo " 	  \"title\": \"FLOD\"", >> $SETTINGS
-echo " 	},", >> $SETTINGS
+echo " 	  \"title\": \"FLOD\"" >> $SETTINGS
+echo " 	}," >> $SETTINGS
 echo " 	\"secret\": \"$APPSECRET\"", >> $SETTINGS
 echo " 	\"root\": \"home\"" >> $SETTINGS
 echo "}" >> $SETTINGS
@@ -128,7 +128,7 @@ else
 		echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
 		read -u 1 GITREPO
 		if [ $GITREPO != "" ]; then
-			$GIT clone $GITREPOi $COMPONENTS
+			$GIT clone $GITREPO $COMPONENTS
                 else        
  			echo "Creating a brand new repository with default components"
 			mkdir $COMPONENTS
@@ -136,6 +136,7 @@ else
 			cp -r installation/defaultComponents/* $COMPONENTS
 			$GIT init
 			cd ..
+		fi
 	fi
 	cp -r installation/defaultComponents/* $COMPONENTS
 fi
