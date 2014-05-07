@@ -96,3 +96,4 @@ class Namespace(Singleton):
                 rest = uri.replace(u, "", 1)
                 return "%s:%s" % (n, rest.replace("/", "_").replace("#", "_"))
         return uri
+
