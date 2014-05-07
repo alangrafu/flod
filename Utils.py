@@ -43,13 +43,18 @@ class SparqlEndpoint(Singleton):
                     for row in results["results"]["bindings"]:
                         for elem in results["head"]["vars"]:
                             if elem not in row:
-                                row[elem] = {}                                
+                                row[elem] = {}
+                            if "type" not in row[elem]:
+                                row[elem]["type"] = None
+                                row[elem]["value"] = None
+                                row[elem]["curie"] = None
                             if row[elem]["type"] == "uri":
                                 row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
                                 row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
             except:
                 print sys.exc_info()
                 print "Error iterating results"
+            print results
             return results
         except:
             print sys.exc_info()
