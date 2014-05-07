@@ -74,7 +74,7 @@ echo " 		\"dbpedia\": \"http://dbpedia.org/sparql\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"host\": \"0.0.0.0\"," >> $SETTINGS
 echo " 	\"port\": $PORT", >> $SETTINGS
-echo " 	\"flod\": { #Here you can add custom variables", >> $SETTINGS
+echo " 	\"flod\": { >> $SETTINGS
 echo " 	  \"title\": \"FLOD\"" >> $SETTINGS
 echo " 	}," >> $SETTINGS
 echo " 	\"secret\": \"$APPSECRET\"", >> $SETTINGS
