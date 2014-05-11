@@ -83,7 +83,7 @@ vocab:allowedPattern ?pattern .
 
 	def _login(self, req, loginUrl):
 		loginHTML = None
-		loginHTML = env.get_template(self.basedir+"login.html")
+		loginHTML = env.get_template(self.basedir+"login.template")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
 				return {"content": loginHTML.render(session=session, uri=loginUrl, flod=self.flod), "uri": loginUrl}
@@ -106,7 +106,7 @@ vocab:allowedPattern ?pattern .
 
 	def _logout(self, req, logoutUrl):
 		logoutHTML = None
-		logoutHTML = env.get_template(self.basedir+"logout.html")
+		logoutHTML = env.get_template(self.basedir+"logout.template")
 		if "username" in session:
 			if req["request"].method == "GET" or req["request"].method == "HEAD":
 				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": logoutUrl}
@@ -119,7 +119,7 @@ vocab:allowedPattern ?pattern .
 
 	def _createUser(self, req, createUserUrl):
 		MYNS = Namespace(self.settings["ns"]["origin"]) if self.settings["mirrored"] else Namespace(self.settings["ns"]["local"])
-		addHTML = env.get_template(self.basedir+"adduser.html")
+		addHTML = env.get_template(self.basedir+"adduser.template")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 				return {"content": addHTML.render(session=session, flod=self.flod), "uri": createUserUrl}
 		if req["request"].method == "POST":
@@ -149,7 +149,7 @@ vocab:allowedPattern ?pattern .
 
 	def _editUser(self, req, editUserUrl):
 		self.VOCAB = Namespace("http://flod.info/")
-		editHTML = env.get_template(self.basedir+"edituser.html")
+		editHTML = env.get_template(self.basedir+"edituser.template")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			g = Graph()
 			try:
