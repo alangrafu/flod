@@ -15,10 +15,10 @@ def printerr(msg):
 
 # Load settings
 try:
-	settings_file = open("settings.json")
+	settings_file = open("components/settings.json")
 	settings = json.load(settings_file)
 except Exception, e:
-	printerr("ERROR: Can't load settings.json")
+	printerr("ERROR: Can't load components/settings.json")
 	exit(1)
 
 # Load modules

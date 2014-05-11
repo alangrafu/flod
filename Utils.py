@@ -79,7 +79,7 @@ class Namespace(Singleton):
             print "Can't load namespace.json. Aborting"
             exit(1)
         try:
-            with open("settings.json", "rb") as s_file:
+            with open("components/settings.json", "rb") as s_file:
                 aux = json.load(s_file)
                 for k, v in aux['ns'].iteritems():
                     self.ns[k] = v
