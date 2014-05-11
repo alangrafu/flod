@@ -1,3 +1,6 @@
+.DS_Store
+flod_env_*
+start.sh
 *.pyc
 components/*
 settings.json
