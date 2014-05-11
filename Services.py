@@ -43,14 +43,16 @@ WHERE {
 		print "hola Types"
 
 	def test(self, r):
-		file = r["localUri"].replace(self.settings["ns"]["local"], "", 1)
+		myPath = r["localUri"].replace(self.settings["ns"]["local"], "", 1).split("/")
+		file = myPath.pop(0)
 		if exists(self.basedir + file):
 			return {"accepted": True, "url": r["localUri"]}
 		return {"accepted": False}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
-		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
+		myPath = req["url"].replace(self.settings["ns"]["local"], "", 1).split("/")
+		file = myPath.pop(0)
 		currentDir = getcwd()
 		service = self.basedir + file
 		uri = req["url"]
@@ -71,7 +73,7 @@ WHERE {
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
 							print sparqlQuery.render(uri=uri, session=session, flod=self.flod)
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
+							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, args=myPath))
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
@@ -87,7 +89,7 @@ WHERE {
 			return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
 			exit(3)
 		try:
-			out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
+			out = html.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath)
 		except Exception:
 			print sys.exc_info()
 			return {"content": "Rendering problems", "status": 500}
