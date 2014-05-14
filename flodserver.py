@@ -75,7 +75,8 @@ def catch_all(path):
 				return redirect(c["uri"], code=status)
 			return Response(c["content"], mimetype=c["mimetype"]), status
 			break
-	return "Resource not found", 404
+	notfoundHTML = env.get_template("notfound.template")
+	return notfoundHTML.render(), 404
 
 
 if __name__ == "__main__":
