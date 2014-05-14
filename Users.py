@@ -211,7 +211,8 @@ vocab:allowedPattern ?pattern .
 			# Edit user
 			if localUri == self.editUserUrl and "username" in session:
 				return self._editUser(req, self.editUserUrl)
-		return {"content": "You are not authorized to access this resource.%s" % req["url"], "url": req["url"], "status": 403}
+		forbidHTML = env.get_template(self.basedir+"forbidden.template")
+		return {"content": forbidHTML.render(session=session, creationSuccess=False, flod=self.flod), "url": req["url"], "status": 403}
 
 	def _load_user(self, username, password):
 		self.users = {}
