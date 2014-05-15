@@ -86,6 +86,7 @@ function defaultSettings {
 			cd $COMPONENTS
 			$GIT add .
 			$GIT commit -a -m "first import of flod components"
+			cd ..		
 }
 
 
