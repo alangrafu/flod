@@ -1,6 +1,6 @@
 """Util classes."""
 
-from Utils import SparqlEndpoint, Namespace
+from Utils import SparqlEndpoint, Namespace, MimetypeSelector
 from jinja2 import Template
 from os import listdir, chdir, getcwd, walk
 from os.path import isfile, join, exists
@@ -9,6 +9,7 @@ import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
 from flask_login import session
+import json
 
 env = Environment()
 env.loader = FileSystemLoader('.')
@@ -25,6 +26,7 @@ class Services:
 		self.settings = settings
 		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
+		self.mime = MimetypeSelector()
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
 	def __getResourceType(self, uri):
@@ -58,6 +60,7 @@ WHERE {
 		uri = req["url"]
 		queryPath = "%s/queries/" % service
 		templatePath = "%s/" % service
+		templateName =  self.mime.getExtension(req["request"].accept_mimetypes.best)
 		try:
 			onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f))]
 		except OSError:
@@ -72,7 +75,6 @@ WHERE {
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							print sparqlQuery.render(uri=uri, session=session, flod=self.flod)
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, args=myPath))
 						except Exception, ex:
 							print sys.exc_info()
@@ -84,13 +86,15 @@ WHERE {
 							continue
 		chdir(currentDir)
 		try:
-			html = env.get_template("%s%s" % (templatePath, "html.template"))
-		except Exception:
-			return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
-			exit(3)
-		try:
-			out = html.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath)
+			if templateName == "json" and not isfile( "%s%s.template" % (templatePath, templateName)):
+				out = json.dumps(queries)
+			else:
+				content = env.get_template("%s%s.template" % (templatePath, templateName))
+				out = content.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath)
 		except Exception:
 			print sys.exc_info()
 			return {"content": "Rendering problems", "status": 500}
+		except Exception:
+			return {"content": "Can't find %s.template in %s" % (templateName, templatePath), "status": 500}
+			exit(3)
 		return {"content": out, "mimetype": "text/html"}

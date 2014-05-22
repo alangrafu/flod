@@ -4,10 +4,13 @@ from jinja2 import Template
 from os import listdir, walk, chdir, getcwd
 from os.path import isfile, join, exists
 from flask import Response
-from Utils import Namespace, SparqlEndpoint
+from Utils import Namespace, SparqlEndpoint, MimetypeSelector
 import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
+from rdflib import Graph, plugin
+from rdflib.serializer import Serializer
+import json
 
 env = Environment()
 env.loader = FileSystemLoader('.')
@@ -17,7 +20,8 @@ class Types:
 	settings = {}
 	sparql = None
 	a = None
-	flod = None	
+	flod = None
+	mime = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
@@ -25,6 +29,7 @@ class Types:
 		self.sparql = SparqlEndpoint(self.settings)
 		self.ns = Namespace()
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
+		self.mime = MimetypeSelector()
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
@@ -45,32 +50,49 @@ WHERE {
 		"""Test if this module should take care of that URI"""
 		self.a = Accept()
 		uri = r["originUri"]
-		results = self.sparql.query("""
+		x = uri.split(".")
+		extension = x.pop()
+		typeQuery = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?p ?o
+SELECT *
 WHERE {
 {<%s> ?p ?o}
 UNION
 {?s <%s> ?o}
 UNION
 {?s ?p <%s>}
-}
-LIMIT 1""" % (uri, uri, uri))
-		if len(results["results"]["bindings"]) > 0:
+""" % (uri, uri, uri)
+		if self.mime.getMime(extension) is not None:
+			extensionlessUri = ".".join(x)
+			typeQuery += """UNION{<%s> ?p2 ?o2}
+UNION
+{?s2 <%s> ?o2}
+UNION
+{?s2 ?p2 <%s>} """ % (extensionlessUri, extensionlessUri, extensionlessUri)
+		typeQuery += """}
+LIMIT 1"""
+		results = self.sparql.query(typeQuery)
+		print typeQuery
+		if results is None:
+			pass
+		elif len(results["results"]["bindings"]) > 0:
 			myUri = uri
 			if self.settings["mirrored"] is True:
 				myUri = uri.replace(self.settings["ns"]["origin"], self.settings["ns"]["local"])
 			extension = self.a.getExtension(r["mimetype"])
 			types = self.__getResourceType(uri)
 			curiedTypes = []
-			print "Types"
 			for t in types:
-				print t
 				curiedTypes.append(self.ns.uri2curie(t))
-				print self.ns.uri2curie(t)
 			response = r
 			response["accepted"] = True
-			response["url"] = "%s.%s" % (myUri, extension)
+			if "p2" in results["results"]["bindings"][0] or "s2" in results["results"]["bindings"]:
+				print "Found", myUri
+				response["url"] = myUri
+			else:
+				print "Found", myUri, extension
+				response["url"] = "%s.%s" % (myUri, extension)
+			print results
 			response["types"] = curiedTypes
 			return response
 		return {"accepted": False}
@@ -78,8 +100,12 @@ LIMIT 1""" % (uri, uri, uri))
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		uri = req["originUri"]
+		print uri,", ---------------------"
 		currentDir = getcwd()
-		if req["mimetype"] == "text/html":
+		x = uri.split(".")
+		templateName =  x.pop()
+		uri = ".".join(x)
+		if templateName == "html" or templateName == "json":
 			queryPath = "components/types/rdfs__Resource/queries/"
 			templatePath = "components/types/rdfs__Resource/"
 			if len(req["types"]) > 0:
@@ -99,19 +125,23 @@ LIMIT 1""" % (uri, uri, uri))
 
 			queries = {}
 			try:
-				html = env.get_template("%s%s" % (templatePath, "html.template"))
+				html = env.get_template("%s%s.template" % (templatePath, templateName))
 			except Exception:
 				print sys.exc_info()
-				return {"content": "Can't find html.template in %s" % templatePath, "status": 500}
+				if templateName != "json":
+					return {"content": "Can't find %s.template in %s" % (templateName, templatePath), "status": 500}
 
 			for filename in onlyfiles:
 				for root, dirs, files in walk(queryPath):
 					for filename in files:
+						if not filename.endswith(".query"):
+							continue
 						try:
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
+							print sparqlQuery.render(uri=uri, session=session, flod=self.flod)
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
 						except Exception, ex:
 							print sys.exc_info()
@@ -120,7 +150,10 @@ LIMIT 1""" % (uri, uri, uri))
 						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 			chdir(currentDir)
 			try:
-				out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
+				if templateName == "json":
+					out = json.dumps(queries)
+				else:
+					out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
 			except Exception:
 				print sys.exc_info()
 				return {"content": "Rendering problems", "status": 500}
@@ -136,18 +169,13 @@ LIMIT 1""" % (uri, uri, uri))
 						if exists(aux):
 							queryPath = aux
 							break
-				sparqlQuery = env.get_template(queryPath)
-				self.sparql.setQuery(sparqlQuery.render(uri=uri, flod=self.flod))
+				sparqlQueryT = env.get_template(queryPath)
+				sparqlQuery = sparqlQueryT.render(uri=uri, session=session, flod=self.flod)
 			# If not found, use a generic CONSTRUCT query
 			except Exception, e:
-				self.sparql.setQuery("""
+				sparqlQuery = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-CONSTRUCT {<%s>  ?p ?o}
-WHERE { <%s> ?p ?o }
-LIMIT 100""" % (uri, uri))
-		# self.sparql.setQuery(query)
-			self.sparql.setReturnFormat(XML)
-		# self.sparql.setReturnFormat(JSON)
-			results = self.sparql.query().convert()
-			r = results.serialize(format=self.a.getConversionType(req["mimetype"]))
-		return {"content": r, "mimetype": "text/turtle"}
+DESCRIBE {<%s> }
+LIMIT 100""" % (uri)
+			results = self.sparql.query(sparqlQuery)			
+		return {"content": results, "mimetype": self.mime.getMime(templateName)}

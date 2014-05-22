@@ -1,9 +1,10 @@
 """Class in charge of managing the SPARQL Endpoints."""
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import SPARQLWrapper, JSON, XML
 import sys
 import json
+import logging
 
-
+logging.basicConfig()
 class Singleton(object):
 
     """Base singleton class."""
@@ -38,28 +39,24 @@ class SparqlEndpoint(Singleton):
         sparql.setReturnFormat(JSON)
         try:
             results = sparql.query().convert()
-            try:
-                if self.settings["mirrored"] is True:
-                    for row in results["results"]["bindings"]:
-                        for elem in results["head"]["vars"]:
-                            if elem not in row:
-                                row[elem] = {}
-                            if "type" not in row[elem]:
-                                row[elem]["type"] = None
-                                row[elem]["value"] = None
-                                row[elem]["curie"] = None
-                            if row[elem]["type"] == "uri":
-                                row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
-                                row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
-            except:
-                print sys.exc_info()
-                print "Error iterating results"
-            print results
-            return results
+            if self.settings["mirrored"] is True:
+                for row in results["results"]["bindings"]:
+                    for elem in results["head"]["vars"]:
+                        if elem not in row:
+                            row[elem] = {}
+                        if "type" not in row[elem]:
+                            row[elem]["type"] = None
+                            row[elem]["value"] = None
+                            row[elem]["curie"] = None
+                        if row[elem]["type"] == "uri":
+                            row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
+                            row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
         except:
-            print sys.exc_info()
-            print "SparqlEndpoint problem"
+            print q
             return None
+
+        return results
+
 
 
 class Namespace(Singleton):
@@ -97,3 +94,28 @@ class Namespace(Singleton):
                 return "%s:%s" % (n, rest.replace("/", "_").replace("#", "_"))
         return uri
 
+
+
+
+class MimetypeSelector(Singleton):
+    mime2extension = {}
+
+    def __init__(self):
+        self.mime2extension["text/html"] = "html"
+        self.mime2extension["application/json"] = "json"
+        self.mime2extension["application/xhtml+xml"] = "html"
+        # For later
+        # self.mime2extension["text/turtle"] = "ttl"
+        # self.mime2extension["application/rdf+xml"] = "rdf"
+        # self.mime2extension["application/javascript"] = "js"
+        # self.mime2extension["application/xhtml+xml"] = "html"
+        # self.mime2extension["application/xml"] = "html"
+
+    def getExtension(self, mime):
+        return self.mime2extension[mime] if mime in self.mime2extension else "html"
+
+    def getMime(self, extension):
+        for key in self.mime2extension.keys():
+            if self.mime2extension[key] == extension:
+                return key
+        return None

@@ -62,10 +62,10 @@ def catch_all(path):
 		response["request"] = request
 		if response["accepted"] is True:
 			if localUri != response["url"]:
-				cachedDocuments[response["url"]] = response
-				cachedDocuments[response["url"]]["localUri"] = localUri
-				cachedDocuments[response["url"]]["originUri"] = originUri
-				cachedDocuments[response["url"]]["mime"] = mime
+				# cachedDocuments[response["url"]] = response
+				# cachedDocuments[response["url"]]["localUri"] = localUri
+				# cachedDocuments[response["url"]]["originUri"] = originUri
+				# cachedDocuments[response["url"]]["mime"] = mime
 				return redirect(response["url"], code=303)
 			c = module.execute(response)
 			if "mimetype" not in c:
