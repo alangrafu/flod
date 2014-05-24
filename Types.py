@@ -72,7 +72,6 @@ UNION
 		typeQuery += """}
 LIMIT 1"""
 		results = self.sparql.query(typeQuery)
-		print typeQuery
 		if results is None:
 			pass
 		elif len(results["results"]["bindings"]) > 0:
@@ -134,20 +133,24 @@ LIMIT 1"""
 			for filename in onlyfiles:
 				for root, dirs, files in walk(queryPath):
 					for filename in files:
-						if not filename.endswith(".query"):
-							continue
 						try:
 							currentEndpoint = "local"
-							if root.replace(queryPath, "", 1) != "":
-								currentEndpoint = root.split("/").pop()
+							_aux = root.rstrip("/").split("/").pop()
+							if _aux != "queries":
+								currentEndpoint = _aux
+							if not filename.endswith(".query"):
+								continue
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							print sparqlQuery.render(uri=uri, session=session, flod=self.flod)
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod))
+							results = self.sparql.query(sparqlQuery.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+							if results is not None and "results" in results:
+								queries[filename.replace(".query", "")] = results["results"]["bindings"]
+							else: 
+								#Fail gracefully
+								queries[filename.replace(".query", "")] = []
 						except Exception, ex:
 							print sys.exc_info()
-							print "\n\nCANNOT OPEN FILE %s/%s" % (root, filename)
-
-						queries[filename.replace(".query", "")] = results["results"]["bindings"]
+							print ex
+							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
 			chdir(currentDir)
 			try:
 				if templateName == "json":

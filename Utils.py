@@ -34,6 +34,10 @@ class SparqlEndpoint(Singleton):
     def query(self, q, thisEndpoint="local"):
         """Query an endpoint."""
         ns = Namespace()
+        if thisEndpoint not in self.endpoints:
+            #Fail gracefully
+            print "Endpoint '%s' not found, will use 'local' instead" % thisEndpoint
+            thisEndpoint = "local"
         sparql = self.endpoints[thisEndpoint]
         sparql.setQuery(q)
         sparql.setReturnFormat(JSON)
@@ -52,7 +56,6 @@ class SparqlEndpoint(Singleton):
                             row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
                             row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
         except:
-            print q
             return None
 
         return results

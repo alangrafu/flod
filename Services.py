@@ -42,7 +42,7 @@ WHERE {
 		return types
 
 	def operations(self):
-		print "hola Types"
+		print "hola Services"
 
 	def test(self, r):
 		myPath = r["localUri"].replace(self.settings["ns"]["local"], "", 1).split("/")
@@ -72,18 +72,22 @@ WHERE {
 					for filename in files:
 						try:
 							currentEndpoint = "local"
-							if root.replace(queryPath, "", 1) != "":
-								currentEndpoint = root.split("/").pop()
+							_aux = root.rstrip("/").split("/").pop()
+							if _aux != "queries":
+								currentEndpoint = _aux
+							if not filename.endswith(".query"):
+								continue
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, args=myPath))
+							results = self.sparql.query(sparqlQuery.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+							if results is not None and "results" in results:
+								queries[filename.replace(".query", "")] = results["results"]["bindings"]
+							else: 
+								#Fail gracefully
+								queries[filename.replace(".query", "")] = []
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
 							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
-						try:
-							queries[filename.replace(".query", "")] = results["results"]["bindings"]
-						except:
-							continue
 		chdir(currentDir)
 		try:
 			if templateName == "json" and not isfile( "%s%s.template" % (templatePath, templateName)):
