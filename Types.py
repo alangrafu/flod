@@ -1,19 +1,14 @@
 from flask_login import session
 from accept import Accept
-from jinja2 import Template
 from os import listdir, walk, chdir, getcwd
 from os.path import isfile, join, exists
 from flask import Response
-from Utils import Namespace, SparqlEndpoint, MimetypeSelector
+from Utils import Namespace, SparqlEndpoint, MimetypeSelector, EnvironmentFactory
 import sys
-from jinja2 import FileSystemLoader
-from jinja2.environment import Environment
 from rdflib import Graph, plugin
 from rdflib.serializer import Serializer
 import json
 
-env = Environment()
-env.loader = FileSystemLoader('.')
 
 
 class Types:
@@ -22,6 +17,7 @@ class Types:
 	a = None
 	flod = None
 	mime = None
+	env = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
@@ -30,6 +26,8 @@ class Types:
 		self.ns = Namespace()
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 		self.mime = MimetypeSelector()
+		e = EnvironmentFactory(self.settings, app)
+		self.env = e.getEnvironment()
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""

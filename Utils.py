@@ -3,6 +3,8 @@ from SPARQLWrapper import SPARQLWrapper, JSON, XML
 import sys
 import json
 import logging
+from jinja2 import Environment, PackageLoader, FileSystemLoader
+import uuid
 
 logging.basicConfig()
 class Singleton(object):
@@ -127,3 +129,44 @@ class MimetypeSelector(Singleton):
             if self.mime2extension[key] == extension:
                 return key
         return None
+
+class EnvironmentFactory(Singleton):
+    environment = None
+    def __init__(self, settings, app):
+        self.environment = Environment()
+        self.environment.loader = FileSystemLoader('.')
+        self.environment.filters['GoogleMaps'] = self._GoogleMaps
+    def getEnvironment(self):
+        return self.environment
+    def _GoogleMaps(self, data, lat=None,lon=None,zoom=None, width=None, height=None):
+        _vizId = str(uuid.uuid4().hex)
+        _dataId = "data_%s"%_vizId
+        _centerX = 0
+        _centerY = 0
+        _zoom = "undefined" if zoom is None else int(zoom)
+        _width = 400 if width is None else int(width)
+        _height = 300 if height is None else int(height)
+        _jData = """ %s = [];
+"""%_dataId
+        if lon is None or lat is None:
+            return ""
+        for row in data:
+            _jData += """ %s.push(new google.maps.LatLng(%s, %s));
+""" % (_dataId, row[lat]["value"], row[lon]["value"])
+            _centerX += float(row[lat]["value"])
+            _centerY += float(row[lon]["value"])
+        return """
+<div id="map_%s" style="height:%dpx;width:%dpx;"></div>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/js/filters/googlemaps.js"></script>
+<script type="text/javascript">
+%s
+    
+var mapOptions = {
+    center: new google.maps.LatLng(%f, %f),
+    zoom: %s,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+};
+GoogleMap("map_%s", %s, mapOptions);
+</script>
+""" % (_vizId, _height, _width, _jData, (_centerX/len(data)), (_centerY/len(data)), _zoom, _vizId, _dataId)
