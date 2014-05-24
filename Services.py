@@ -32,7 +32,7 @@ class Services:
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
 		types = []
-		results = self.sparql.query("""
+		(results, first) = self.sparql.query("""
 SELECT DISTINCT ?t
 WHERE {
 <%s> a ?t
@@ -67,6 +67,7 @@ WHERE {
 			print "Warning: Can't find path %s for queries." % templatePath
 			onlyfiles = []
 		queries = {}
+		first={}
 		for filename in onlyfiles:
 				for root, dirs, files in walk(queryPath):
 					for filename in files:
@@ -78,12 +79,15 @@ WHERE {
 							if not filename.endswith(".query"):
 								continue
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+							(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
 							if results is not None and "results" in results:
-								queries[filename.replace(".query", "")] = results["results"]["bindings"]
+								_name = filename.replace(".query", "")
+								queries[_name] = results["results"]["bindings"]
+								first[_name] = thisFirst
 							else: 
 								#Fail gracefully
 								queries[filename.replace(".query", "")] = []
+								first[_name] = {}
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
@@ -94,7 +98,7 @@ WHERE {
 				out = json.dumps(queries)
 			else:
 				content = env.get_template("%s%s.template" % (templatePath, templateName))
-				out = content.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath)
+				out = content.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath)
 		except Exception:
 			print sys.exc_info()
 			return {"content": "Rendering problems", "status": 500}

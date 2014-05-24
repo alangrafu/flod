@@ -34,7 +34,7 @@ class Types:
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
 		types = []
-		results = self.sparql.query("""
+		(results, thisFirst) = self.sparql.query("""
 SELECT DISTINCT ?t
 WHERE {
 <%s> a ?t
@@ -71,7 +71,7 @@ UNION
 {?s2 ?p2 <%s>} """ % (extensionlessUri, extensionlessUri, extensionlessUri)
 		typeQuery += """}
 LIMIT 1"""
-		results = self.sparql.query(typeQuery)
+		(results, thisFirst) = self.sparql.query(typeQuery)
 		if results is None:
 			pass
 		elif len(results["results"]["bindings"]) > 0:
@@ -86,12 +86,9 @@ LIMIT 1"""
 			response = r
 			response["accepted"] = True
 			if "p2" in results["results"]["bindings"][0] or "s2" in results["results"]["bindings"]:
-				print "Found", myUri
 				response["url"] = myUri
 			else:
-				print "Found", myUri, extension
 				response["url"] = "%s.%s" % (myUri, extension)
-			print results
 			response["types"] = curiedTypes
 			return response
 		return {"accepted": False}
@@ -99,7 +96,6 @@ LIMIT 1"""
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		uri = req["originUri"]
-		print uri,", ---------------------"
 		currentDir = getcwd()
 		x = uri.split(".")
 		templateName =  x.pop()
@@ -123,6 +119,7 @@ LIMIT 1"""
 				return Response(response="Internal error\n\n", status=500)
 
 			queries = {}
+			first = {}
 			try:
 				html = env.get_template("%s%s.template" % (templatePath, templateName))
 			except Exception:
@@ -141,12 +138,15 @@ LIMIT 1"""
 							if not filename.endswith(".query"):
 								continue
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							results = self.sparql.query(sparqlQuery.render(queries=queries, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+							(results, thisFirst) = self.sparql.query(sparqlQuery.render(first=first, queries=queries, uri=uri, session=session, flod=self.flod), currentEndpoint)
 							if results is not None and "results" in results:
-								queries[filename.replace(".query", "")] = results["results"]["bindings"]
+								_name = filename.replace(".query", "")
+								queries[_name] = results["results"]["bindings"]
+								first[_name] = thisFirst
 							else: 
 								#Fail gracefully
 								queries[filename.replace(".query", "")] = []
+								first[_name] = {}
 						except Exception, ex:
 							print sys.exc_info()
 							print ex
@@ -156,7 +156,7 @@ LIMIT 1"""
 				if templateName == "json":
 					out = json.dumps(queries)
 				else:
-					out = html.render(queries=queries, uri=uri, session=session, flod=self.flod)
+					out = html.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod)
 			except Exception:
 				print sys.exc_info()
 				return {"content": "Rendering problems", "status": 500}

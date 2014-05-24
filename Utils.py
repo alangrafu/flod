@@ -41,10 +41,12 @@ class SparqlEndpoint(Singleton):
         sparql = self.endpoints[thisEndpoint]
         sparql.setQuery(q)
         sparql.setReturnFormat(JSON)
+        isFirst = True
+        first = {}
         try:
             results = sparql.query().convert()
             if self.settings["mirrored"] is True:
-                for row in results["results"]["bindings"]:
+                for row in results["results"]["bindings"]:                    
                     for elem in results["head"]["vars"]:
                         if elem not in row:
                             row[elem] = {}
@@ -55,10 +57,13 @@ class SparqlEndpoint(Singleton):
                         if row[elem]["type"] == "uri":
                             row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
                             row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
+                    if isFirst:
+                        first = row
+                        isFirst = False
         except:
-            return None
+            return (None, None)
 
-        return results
+        return (results, first)
 
 
 
