@@ -68,30 +68,29 @@ WHERE {
 			onlyfiles = []
 		queries = {}
 		first={}
-		for filename in onlyfiles:
-				for root, dirs, files in walk(queryPath):
-					for filename in files:
-						try:
-							currentEndpoint = "local"
-							_aux = root.rstrip("/").split("/").pop()
-							if _aux != "queries":
-								currentEndpoint = _aux
-							if not filename.endswith(".query"):
-								continue
-							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
-							if results is not None and "results" in results:
-								_name = filename.replace(".query", "")
-								queries[_name] = results["results"]["bindings"]
-								first[_name] = thisFirst
-							else: 
-								#Fail gracefully
-								queries[filename.replace(".query", "")] = []
-								first[_name] = {}
-						except Exception, ex:
-							print sys.exc_info()
-							print ex
-							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
+		for root, dirs, files in walk(queryPath):
+			for filename in files:
+				try:
+					currentEndpoint = "local"
+					_aux = root.rstrip("/").split("/").pop()
+					if _aux != "queries":
+						currentEndpoint = _aux
+					if not filename.endswith(".query"):
+						continue
+					sparqlQuery = env.get_template("%s/%s" % (root, filename))
+					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+					if results is not None and "results" in results:
+						_name = filename.replace(".query", "")
+						queries[_name] = results["results"]["bindings"]
+						first[_name] = thisFirst
+					else: 
+						#Fail gracefully
+						queries[filename.replace(".query", "")] = []
+						first[_name] = {}
+				except Exception, ex:
+					print sys.exc_info()
+					print ex
+					return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
 		chdir(currentDir)
 		try:
 			if templateName == "json" and not isfile( "%s%s.template" % (templatePath, templateName)):
