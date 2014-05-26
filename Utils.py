@@ -151,6 +151,8 @@ class EnvironmentFactory(Singleton):
 """%_dataId
         if lon is None or lat is None:
             return ""
+        if data is None or len(data) == 0:
+            return ""
         for row in data:
             _jData += """ %s.push(new google.maps.LatLng(%s, %s));
 """ % (_dataId, row[lat]["value"], row[lon]["value"])
@@ -181,6 +183,8 @@ GoogleMap("map_%s", %s, mapOptions);
         _jData = """ %s = [];
 """%_dataId
         if x is None or y is None:
+            return ""
+        if data is None:
             return ""
         for row in data:
             _jData += """ %s.push({%s: "%s", %s: %s});
