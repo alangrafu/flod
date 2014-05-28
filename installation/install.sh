@@ -99,6 +99,12 @@ else
 		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
 		defaultSettings
 	else
+                echo "--------------------------------"
+                echo "For a tutorial application, use this URL"
+                echo ""
+                echo https://github.com/alangrafu/flod-tutorial-app
+                echo ""
+                echo "--------------------------------"
 		echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
 		read -u 1 GITREPO
 		if [ "$GITREPO" != "" ]; then
