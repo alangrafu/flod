@@ -58,11 +58,12 @@ class SparqlEndpoint(Singleton):
                             row[elem]["curie"] = None
                         if row[elem]["type"] == "uri":
                             row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
-                            row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
+                        row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
                     if isFirst:
                         first = row
                         isFirst = False
         except:
+            print sys.exc_info()
             return (None, None)
 
         return (results, first)
@@ -97,6 +98,8 @@ class Namespace(Singleton):
 
     def uri2curie(self, uri):
         """Convert a URI to a CURIe."""
+        if uri is None:
+            return None
         for n in self.ns:
             u = self.ns[n]
             if uri.find(u) == 0:
