@@ -70,6 +70,7 @@ UNION
 		typeQuery += """}
 LIMIT 1"""
 		(results, thisFirst) = self.sparql.query(typeQuery)
+		print results, typeQuery
 		if results is None:
 			pass
 		elif len(results["results"]["bindings"]) > 0:
@@ -119,7 +120,7 @@ LIMIT 1"""
 			queries = {}
 			first = {}
 			try:
-				html = env.get_template("%s%s.template" % (templatePath, templateName))
+				html = self.env.get_template("%s%s.template" % (templatePath, templateName))
 			except Exception:
 				print sys.exc_info()
 				if templateName != "json":
@@ -134,7 +135,7 @@ LIMIT 1"""
 							currentEndpoint = _aux
 						if not filename.endswith(".query"):
 							continue
-						sparqlQuery = env.get_template("%s/%s" % (root, filename))
+						sparqlQuery = self.env.get_template("%s/%s" % (root, filename))
 						(results, thisFirst) = self.sparql.query(sparqlQuery.render(first=first, queries=queries, uri=uri, session=session, flod=self.flod), currentEndpoint)
 						if results is not None and "results" in results:
 							_name = filename.replace(".query", "")
@@ -169,7 +170,7 @@ LIMIT 1"""
 						if exists(aux):
 							queryPath = aux
 							break
-				sparqlQueryT = env.get_template(queryPath)
+				sparqlQueryT = self.env.get_template(queryPath)
 				sparqlQuery = sparqlQueryT.render(uri=uri, session=session, flod=self.flod)
 			# If not found, use a generic CONSTRUCT query
 			except Exception, e:
