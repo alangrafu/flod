@@ -70,7 +70,6 @@ UNION
 		typeQuery += """}
 LIMIT 1"""
 		(results, thisFirst) = self.sparql.query(typeQuery)
-		print results, typeQuery
 		if results is None:
 			pass
 		elif len(results["results"]["bindings"]) > 0:
