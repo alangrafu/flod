@@ -50,6 +50,7 @@ WHERE {
 		uri = r["originUri"]
 		x = uri.split(".")
 		extension = x.pop()
+		extensionlessUri = None
 		typeQuery = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT *
@@ -73,20 +74,21 @@ LIMIT 1"""
 		if results is None:
 			pass
 		elif len(results["results"]["bindings"]) > 0:
-			myUri = uri
-			if self.settings["mirrored"] is True:
-				myUri = uri.replace(self.settings["ns"]["origin"], self.settings["ns"]["local"])
-			extension = self.a.getExtension(r["mimetype"])
+			if "p2" in results["results"]["bindings"][0] or "s2" in results["results"]["bindings"]:
+				myUri = uri
+				uri = extensionlessUri
+			else:
+				extension = self.a.getExtension(r["mimetype"])
+				myUri = ".".join([uri, extension])
 			types = self.__getResourceType(uri)
+			if self.settings["mirrored"] is True:
+				myUri = myUri.replace(self.settings["ns"]["origin"], self.settings["ns"]["local"])
 			curiedTypes = []
 			for t in types:
 				curiedTypes.append(self.ns.uri2curie(t))
 			response = r
 			response["accepted"] = True
-			if "p2" in results["results"]["bindings"][0] or "s2" in results["results"]["bindings"]:
-				response["url"] = myUri
-			else:
-				response["url"] = "%s.%s" % (myUri, extension)
+			response["url"] = myUri
 			response["types"] = curiedTypes
 			return response
 		return {"accepted": False}
@@ -124,7 +126,6 @@ LIMIT 1"""
 				print sys.exc_info()
 				if templateName != "json":
 					return {"content": "Can't find %s.template in %s" % (templateName, templatePath), "status": 500}
-
 			for root, dirs, files in walk(queryPath):
 				for filename in files:
 					try:
@@ -175,7 +176,7 @@ LIMIT 1"""
 			except Exception, e:
 				sparqlQuery = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-DESCRIBE {<%s> }
+DESCRIBE <%s> 
 LIMIT 100""" % (uri)
 			results = self.sparql.query(sparqlQuery)			
 		return {"content": results, "mimetype": self.mime.getMime(templateName)}

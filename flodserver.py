@@ -52,6 +52,8 @@ def catch_all(path):
 	originUri = localUri
 	if settings["mirrored"] is True:
 		originUri = "%s%s" % (settings["ns"]["origin"], path)
+	localUri = localUri.replace("/cp/", "/")
+	originUri = originUri.replace("/cp/", "/")
 	# Store .html, .ttl, .json URLs that are not present in triple store.
 	if localUri in cachedDocuments.keys():
 		originUri = cachedDocuments[localUri]["originUri"]
@@ -76,7 +78,7 @@ def catch_all(path):
 			return Response(c["content"], mimetype=c["mimetype"]), status
 			break
 	notfoundHTML = env.get_template("notfound.template")
-	return notfoundHTML.render(), 404
+	return notfoundHTML.render(uri=localUri, flod=settings["flod"]), 404
 
 
 if __name__ == "__main__":
