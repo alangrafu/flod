@@ -45,7 +45,7 @@ else:
 
 @app.route("/")
 def root_url():
-	return redirect(settings["rootPrefix"]+settings["root"], code=302)
+	return redirect(settings["root"], code=302)
 
 
 @app.route("/<path:path>", methods=['POST', 'GET', 'HEAD', 'PUT', 'DELETE'])
@@ -63,7 +63,7 @@ def catch_all(path):
 		localUri = localUri.replace(settings["rootPrefix"], "", 1)
 		originUri = originUri.replace(settings["rootPrefix"], "", 1)
 		if localUri == settings["ns"]["local"]:
-			return redirect(settings["rootPrefix"]+settings["root"], code=302)
+			return redirect(settings["root"], code=302)
 	c = ""
 	r = {"originUri": originUri, "localUri": localUri, "mimetype": mime, "request": request}
 	for module in modules:
