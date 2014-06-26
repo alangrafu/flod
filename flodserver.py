@@ -37,11 +37,15 @@ for mod in settings["modules"]:
 		app.logger.warning("No operations!")
 cachedDocuments = {}
 print modules
+if "rootPrefix" in settings:
+	settings["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
+else:
+	settings["rootPrefix"] = ""
 
 
 @app.route("/")
 def root_url():
-	return redirect(settings["root"], code=302)
+	return redirect(settings["rootPrefix"]+settings["root"], code=302)
 
 
 @app.route("/<path:path>", methods=['POST', 'GET', 'HEAD', 'PUT', 'DELETE'])
@@ -55,6 +59,11 @@ def catch_all(path):
 	# Store .html, .ttl, .json URLs that are not present in triple store.
 	if localUri in cachedDocuments.keys():
 		originUri = cachedDocuments[localUri]["originUri"]
+	if "rootPrefix" in settings:
+		localUri = localUri.replace(settings["rootPrefix"], "", 1)
+		originUri = originUri.replace(settings["rootPrefix"], "", 1)
+		if localUri == settings["ns"]["local"]:
+			return redirect(settings["rootPrefix"]+settings["root"], code=302)
 	c = ""
 	r = {"originUri": originUri, "localUri": localUri, "mimetype": mime, "request": request}
 	for module in modules:
