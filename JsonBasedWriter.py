@@ -38,6 +38,7 @@ class JsonBasedWriter:
 			g = self.graph.get_context(graphuri)
 			g.update(q)
 		except:
+			print sys.exc_info()
 			return False
 		return True
 
