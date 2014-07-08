@@ -140,6 +140,7 @@ class EnvironmentFactory(Singleton):
         self.environment.loader = FileSystemLoader('.')
         self.environment.filters['GoogleMaps'] = self._GoogleMaps
         self.environment.filters['BarChart'] = self._BarChart
+        self.environment.filters['ColumnChart'] = self._ColumnChart
     def getEnvironment(self):
         return self.environment
     def _GoogleMaps(self, data, lat=None,lon=None,zoom=None, width=None, height=None):
@@ -178,6 +179,46 @@ GoogleMap("map_%s", %s, mapOptions);
 </script>
 """ % (_vizId, _height, _width, _jData, (_centerX/len(data)), (_centerY/len(data)), _zoom, _vizId, _dataId)
 
+    def _ColumnChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
+        _vizId = str(uuid.uuid4().hex)
+        _dataId = "data_%s"%_vizId
+        _width = 400 if width is None else int(width)
+        _height = 300 if height is None else int(height)
+        _jData = """ %s = [];
+"""%_dataId
+        if x is None or y is None:
+            return ""
+        if data is None:
+            return ""
+        for row in data:
+            _jData += """ %s.push({%s: "%s", %s: %s});
+""" % (_dataId, x, row[x]["value"],  y, row[y]["value"])
+        myOptions = {}
+        myOptions["width"] = _width
+        myOptions["height"] = _height
+        myOptions["x"] = x
+        myOptions["y"] = y
+        if lowerBound is not None:
+            myOptions["lowerBound"] = lowerBound
+        if upperBound is not None:
+            myOptions["upperBound"] = upperBound
+        if leftBound is not None:
+            myOptions["leftBound"] = leftBound
+        if rightBound is not None:
+            myOptions["rightBound"] = rightBound
+        options = """options_%s = %s""" % (_vizId, json.dumps(myOptions))
+        return """<script src="/js/d3.v3.min.js"></script>
+<script src="/js/dimple.v2.0.0.min.js"></script>
+<script src="/js/filters/columnchart.js"></script>
+<div id="barchart_%s" style="height:%dpx;width:%dpx;"></div>
+<script type="text/javascript">
+(function(){
+    %s
+    %s
+    drawColumnChart("columnchart_%s", %s, options_%s);
+})();
+</script>""" % (_vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+
     def _BarChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
         _vizId = str(uuid.uuid4().hex)
         _dataId = "data_%s"%_vizId
@@ -214,6 +255,6 @@ GoogleMap("map_%s", %s, mapOptions);
 (function(){
     %s
     %s
-    drawColumnChart("barchart_%s", %s, options_%s);
+    drawBarChart("barchart_%s", %s, options_%s);
 })();
 </script>""" % (_vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
