@@ -1,4 +1,4 @@
-function drawBarChart(div, data, newoptions){
+function drawColumnChart(div, data, newoptions){
 	options = {
 		width: 500,
 		height: 500,
@@ -16,11 +16,11 @@ function drawBarChart(div, data, newoptions){
     var myChart = new dimple.chart(svg, data);
     myChart.setBounds(options.leftBound*options.width, options.upperBound*options.height, options.rightBound*options.width, options.lowerBound*options.height)
     if(options.logY){
-    	myChart.addLogAxis("x", options.y);	
+    	myChart.addLogAxis("y", options.y);	
     }else{
-    	myChart.addMeasureAxis("x", options.y);
+    	myChart.addMeasureAxis("y", options.y);
     }
-    myChart.addCategoryAxis("y", options.x);
+    myChart.addCategoryAxis("x", options.x);
     myChart.addSeries(null, dimple.plot.bar);
     myChart.draw();
 }
