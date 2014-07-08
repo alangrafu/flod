@@ -98,11 +98,14 @@ def catch_all(path):
 	originUri = localUri
 	if settings["mirrored"] is True:
 		originUri = "%s%s" % (settings["ns"]["origin"], path)
-	localUri = localUri.replace("/cp/", "/")
-	originUri = originUri.replace("/cp/", "/")
 	# Store .html, .ttl, .json URLs that are not present in triple store.
 	if localUri in cachedDocuments.keys():
 		originUri = cachedDocuments[localUri]["originUri"]
+	if "rootPrefix" in settings:
+		localUri = localUri.replace(settings["rootPrefix"], "", 1)
+		originUri = originUri.replace(settings["rootPrefix"], "", 1)
+		if localUri == settings["ns"]["local"]:
+			return redirect(settings["root"], code=302)
 	c = ""
 	r = {"originUri": originUri, "localUri": localUri, "mimetype": mime, "request": request}
 	for module in modules:

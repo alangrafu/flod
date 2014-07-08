@@ -141,6 +141,7 @@ class EnvironmentFactory(Singleton):
         self.environment.filters['GoogleMaps'] = self._GoogleMaps
         self.environment.filters['BarChart'] = self._BarChart
         self.environment.filters['ColumnChart'] = self._ColumnChart
+        self.settings = settings
     def getEnvironment(self):
         return self.environment
     def _GoogleMaps(self, data, lat=None,lon=None,zoom=None, width=None, height=None):
@@ -181,6 +182,7 @@ GoogleMap("map_%s", %s, mapOptions);
 
     def _ColumnChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
         _vizId = str(uuid.uuid4().hex)
+        _prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
         _dataId = "data_%s"%_vizId
         _width = 400 if width is None else int(width)
         _height = 300 if height is None else int(height)
@@ -208,8 +210,8 @@ GoogleMap("map_%s", %s, mapOptions);
             myOptions["rightBound"] = rightBound
         options = """options_%s = %s""" % (_vizId, json.dumps(myOptions))
         return """<script src="/js/d3.v3.min.js"></script>
-<script src="/js/dimple.v2.0.0.min.js"></script>
-<script src="/js/filters/columnchart.js"></script>
+<script src="%s/js/dimple.v2.0.0.min.js"></script>
+<script src="%s/js/filters/columnchart.js"></script>
 <div id="barchart_%s" style="height:%dpx;width:%dpx;"></div>
 <script type="text/javascript">
 (function(){
@@ -217,13 +219,14 @@ GoogleMap("map_%s", %s, mapOptions);
     %s
     drawColumnChart("columnchart_%s", %s, options_%s);
 })();
-</script>""" % (_vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+</script>""" % (_prefix, _prefix, _vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
 
     def _BarChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
         _vizId = str(uuid.uuid4().hex)
         _dataId = "data_%s"%_vizId
         _width = 400 if width is None else int(width)
         _height = 300 if height is None else int(height)
+        _prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
         _jData = """ %s = [];
 """%_dataId
         if x is None or y is None:
@@ -248,8 +251,8 @@ GoogleMap("map_%s", %s, mapOptions);
             myOptions["rightBound"] = rightBound
         options = """options_%s = %s""" % (_vizId, json.dumps(myOptions))
         return """<script src="/js/d3.v3.min.js"></script>
-<script src="/js/dimple.v2.0.0.min.js"></script>
-<script src="/js/filters/barchart.js"></script>
+<script src="%s/js/dimple.v2.0.0.min.js"></script>
+<script src="%s/js/filters/barchart.js"></script>
 <div id="barchart_%s" style="height:%dpx;width:%dpx;"></div>
 <script type="text/javascript">
 (function(){
@@ -257,4 +260,5 @@ GoogleMap("map_%s", %s, mapOptions);
     %s
     drawBarChart("barchart_%s", %s, options_%s);
 })();
-</script>""" % (_vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+</script>""" % (_prefix, _prefix, _vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+
