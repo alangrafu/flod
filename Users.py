@@ -27,6 +27,7 @@ class Users:
 	createUserUrl = None
 	editUserUrl = None
 	flod = None
+	_prefix = ""
 	basedir = "components/users/"
 
 
@@ -34,7 +35,7 @@ class Users:
 		"""Initializes class. Check if login and logout have been redefined."""
 		for k in settings:
 			self.settings[k] = settings[k]
-
+		self._prefix = "/"+self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
 		self.loginUrl = "/%s" % (self.settings["user_module"]["login_url"])
 		self.logoutUrl = "/%s" % (self.settings["user_module"]["logout_url"])
 		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
@@ -86,14 +87,14 @@ vocab:allowedPattern ?pattern .
 		loginHTML = env.get_template(self.basedir+"login.template")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
-				return {"content": loginHTML.render(session=session, uri=loginUrl, flod=self.flod), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, uri=self._prefix+loginUrl, flod=self.flod), "uri": loginUrl}
 			else:
-				return {"content": loginHTML.render(session=session, loginError=False, uri=loginUrl, flod=self.flod), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, loginError=False, uri=self._prefix+loginUrl, flod=self.flod), "uri": loginUrl}
 		if req["request"].method == "POST":
 			_username = req["request"].form["username"]
 			_password = req["request"].form["password"]
 			if "username" in session and _username == session["username"]:
-				return {"content": loginHTML.render(session=session, uri=loginUrl, flod=self.flod), "uri": req["url"]}
+				return {"content": loginHTML.render(session=session, uri=self._prefix+loginUrl, flod=self.flod), "uri": req["url"]}
 			loadedResult = self._load_user(_username, _password)
 			if loadedResult["result"]:
 				session["uri"] = loadedResult["uri"]
@@ -109,10 +110,10 @@ vocab:allowedPattern ?pattern .
 		logoutHTML = env.get_template(self.basedir+"logout.template")
 		if "username" in session:
 			if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self._prefix+logoutUrl}
 			if req["request"].method == "POST":
 				session.clear()
-				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self._prefix+logoutUrl}
 		else:
 			return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
 		return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
@@ -133,8 +134,7 @@ vocab:allowedPattern ?pattern .
 				_password = hashlib.sha224(_salt + req["request"].form["password"]).hexdigest()
 				g.parse("users.ttl", format="turtle")
 				for s, p, o in g.triples((None, self.VOCAB.username, _usernameLiteral)):
-					print s, p, o
-					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod), "uri": createUserUrl}
+					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod), "uri": self._prefix+createUserUrl}
 				g.add((MYNS[slugify(_username)], RDF["type"], self.VOCAB["User"]))
 				g.add((MYNS[slugify(_username)], self.VOCAB.username, _usernameLiteral))
 				g.add((MYNS[slugify(_username)], self.VOCAB.salt, Literal(_salt)))
@@ -144,7 +144,7 @@ vocab:allowedPattern ?pattern .
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
-			return {"content": addHTML.render(session=session, creationSuccess=True, flod=self.flod), "uri": createUserUrl}
+			return {"content": addHTML.render(session=session, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def _editUser(self, req, editUserUrl):
@@ -157,15 +157,14 @@ vocab:allowedPattern ?pattern .
 				data = {}
 				for s, p, o in g.triples((URIRef(session["uri"]), self.VOCAB.username, None)):
 					data["username"] = str(o)
-					print data
-					return {"content": editHTML.render(session=session, data=data, creationSuccess=None, flod=self.flod), "uri": editUserUrl}
-				return {"content": addHTML.render(session=session, flod=self.flod), "uri": "/"}
+					return {"content": editHTML.render(session=session, data=data, creationSuccess=None, flod=self.flod), "uri": self._prefix+editUserUrl}
+				return {"content": addHTML.render(session=session, flod=self.flod), "uri": self._prefix+"/"}
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
 		if req["request"].method == "POST":
 			if "username" not in session:
-				return {"content": addHTML.render(session=session, creationError=True, flod=self.flod), "uri": createUserUrl}
+				return {"content": addHTML.render(session=session, creationError=True, flod=self.flod), "uri": self._prefix+createUserUrl}
 			g = Graph()
 			try:
 				_username = req["request"].form["username"]
@@ -173,12 +172,9 @@ vocab:allowedPattern ?pattern .
 				_password = req["request"].form["password"]
 				_uri = URIRef(session["uri"])
 				g.parse("users.ttl", format="turtle")
-				print "removing"
 				for s, p, o in g.triples((_uri, None, None)):
 					if (_password != "" and p == self.VOCAB.password) and bool(p != self.VOCAB.salt) and bool(p != RDF.type):
-						print "Removing ", s, p, o
 						g.remove((s, p, o))
-				print "adding ", _uri
 				g.add((_uri, self.VOCAB.username, _usernameLiteral))
 				if _password != "" or p != self.VOCAB.password:
 					_password = hashlib.sha224(session["salt"] + req["request"].form["password"]).hexdigest()
@@ -190,7 +186,7 @@ vocab:allowedPattern ?pattern .
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
 			return {"content": editHTML.render(session=session, editionSuccess=True, data=session, flod=self.flod)}
-		return {"content": "Redirecting", "uri": "/", "status": 303}
+		return {"content": "Redirecting", "uri": self._prefix+"/", "status": 303}
 
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
