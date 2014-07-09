@@ -38,12 +38,12 @@ class JsonBasedWriter:
 			g = self.graph.get_context(graphuri)
 			g.update(q)
 		except:
+			print sys.exc_info()
 			return False
 		return True
 
 
 	def test(self, r):
-		print r["request"]
 		if r["request"].method != 'POST':
 			return {"accepted": False}
 		file = r["localUri"].replace(self.settings["ns"]["local"], "", 1)
@@ -77,19 +77,20 @@ class JsonBasedWriter:
 								currentEndpoint = root.split("/").pop()
 							sparqlQuery = env.get_template("%s/%s" % (root, filename))
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, data=data))
+							queries[filename.replace(".query", "")] = results["results"]["bindings"]
 						except Exception, ex:
 							print sys.exc_info()
+							print sparqlQuery
 							print ex
 							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
-
-						queries[filename.replace(".query", "")] = results["results"]["bindings"]
 		chdir(currentDir)
 		try:
 			updatefiles = [f for f in listdir(updatePath) if isfile(join(updatePath, f)) and str(f).endswith(".update")]
 			for updatefile in updatefiles:
 				query = env.get_template(join(updatePath, updatefile))
 				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod, data=data)
-				self._update(out)
+				if not self._update(out):
+					raise Exception
 		except Exception:
 			print sys.exc_info()
 			return {"content": "{\"success\": false}", "status": 500, "mimetype": "application/json"}

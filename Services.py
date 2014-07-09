@@ -1,18 +1,13 @@
 """Util classes."""
 
-from Utils import SparqlEndpoint, Namespace, MimetypeSelector
+from Utils import SparqlEndpoint, Namespace, MimetypeSelector, EnvironmentFactory
 from jinja2 import Template
 from os import listdir, chdir, getcwd, walk
 from os.path import isfile, join, exists
 from flask import Response
 import sys
-from jinja2 import FileSystemLoader
-from jinja2.environment import Environment
 from flask_login import session
 import json
-
-env = Environment()
-env.loader = FileSystemLoader('.')
 
 
 class Services:
@@ -20,6 +15,7 @@ class Services:
 	basedir = "components/services/"
 	sparql = None
 	flod = None
+	env = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
@@ -28,6 +24,8 @@ class Services:
 		self.ns = Namespace()
 		self.mime = MimetypeSelector()
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
+		e = EnvironmentFactory(self.settings, app)
+		self.env = e.getEnvironment()
 
 	def __getResourceType(self, uri):
 		"""Returns the types of a URI"""
@@ -68,36 +66,37 @@ WHERE {
 			onlyfiles = []
 		queries = {}
 		first={}
-		for filename in onlyfiles:
-				for root, dirs, files in walk(queryPath):
-					for filename in files:
-						try:
-							currentEndpoint = "local"
-							_aux = root.rstrip("/").split("/").pop()
-							if _aux != "queries":
-								currentEndpoint = _aux
-							if not filename.endswith(".query"):
-								continue
-							sparqlQuery = env.get_template("%s/%s" % (root, filename))
-							(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
-							if results is not None and "results" in results:
-								_name = filename.replace(".query", "")
-								queries[_name] = results["results"]["bindings"]
-								first[_name] = thisFirst
-							else: 
-								#Fail gracefully
-								queries[filename.replace(".query", "")] = []
-								first[_name] = {}
-						except Exception, ex:
-							print sys.exc_info()
-							print ex
-							return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
+		for root, dirs, files in walk(queryPath):
+			for filename in files:
+				try:
+					currentEndpoint = "local"
+					_aux = root.rstrip("/").split("/").pop()
+					if _aux != "queries":
+						currentEndpoint = _aux
+					if not filename.endswith(".query"):
+						continue
+					sparqlQuery = self.env.get_template("%s/%s" % (root, filename))
+					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+					_name = filename.replace(".query", "")
+					queries[_name] = []
+					first[_name] = {}
+					if results is not None and "results" in results:
+						queries[_name] = results["results"]["bindings"]
+						first[_name] = thisFirst
+					else: 
+						#Fail gracefully
+						queries[filename.replace(".query", "")] = []
+						first[_name] = {}
+				except Exception, ex:
+					print sys.exc_info()
+					print ex
+					return {"content": "A problem with SPARQL endpoint occurred", "status": 500}
 		chdir(currentDir)
 		try:
 			if templateName == "json" and not isfile( "%s%s.template" % (templatePath, templateName)):
 				out = json.dumps(queries)
 			else:
-				content = env.get_template("%s%s.template" % (templatePath, templateName))
+				content = self.env.get_template("%s%s.template" % (templatePath, templateName))
 				out = content.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath)
 		except Exception:
 			print sys.exc_info()

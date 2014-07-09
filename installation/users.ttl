@@ -12,8 +12,12 @@
 
 <file:///anonymous> a flod:Group ;
     flod:allowedPattern "/home",
-        "/login" ;
+      "",  "/login" ;
     flod:name "Anonymous" .
+
+<file:///clients> a flod:Group;
+    flod:allowedPattern "/home", "/facets", "/logout";
+    flod:name "Clients" .
 
 <file:///admin> a flod:Group ;
     flod:allowedPattern "" ;

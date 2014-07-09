@@ -99,6 +99,12 @@ else
 		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
 		defaultSettings
 	else
+                echo "--------------------------------"
+                echo "For a tutorial application, use this URL"
+                echo ""
+                echo https://github.com/alangrafu/flod-tutorial-app
+                echo ""
+                echo "--------------------------------"
 		echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
 		read -u 1 GITREPO
 		if [ "$GITREPO" != "" ]; then
@@ -137,6 +143,8 @@ echo "Loading FLOD requirements"
 $PIP -q install -r $REQ
 #rdflib-jsonld is not installable via normal pip command
 #$PIP install https://github.com/RDFLib/rdflib-jsonld/archive/master.zip
+echo "Copying users.ttl"
+cp installation/users.ttl .
 
 echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh

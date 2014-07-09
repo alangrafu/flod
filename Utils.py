@@ -3,6 +3,8 @@ from SPARQLWrapper import SPARQLWrapper, JSON, XML
 import sys
 import json
 import logging
+from jinja2 import Environment, PackageLoader, FileSystemLoader
+import uuid
 
 logging.basicConfig()
 class Singleton(object):
@@ -56,11 +58,12 @@ class SparqlEndpoint(Singleton):
                             row[elem]["curie"] = None
                         if row[elem]["type"] == "uri":
                             row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
-                            row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
+                        row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
                     if isFirst:
                         first = row
                         isFirst = False
         except:
+            print sys.exc_info()
             return (None, None)
 
         return (results, first)
@@ -95,6 +98,8 @@ class Namespace(Singleton):
 
     def uri2curie(self, uri):
         """Convert a URI to a CURIe."""
+        if uri is None:
+            return None
         for n in self.ns:
             u = self.ns[n]
             if uri.find(u) == 0:
@@ -127,3 +132,133 @@ class MimetypeSelector(Singleton):
             if self.mime2extension[key] == extension:
                 return key
         return None
+
+class EnvironmentFactory(Singleton):
+    environment = None
+    def __init__(self, settings, app):
+        self.environment = Environment()
+        self.environment.loader = FileSystemLoader('.')
+        self.environment.filters['GoogleMaps'] = self._GoogleMaps
+        self.environment.filters['BarChart'] = self._BarChart
+        self.environment.filters['ColumnChart'] = self._ColumnChart
+        self.settings = settings
+    def getEnvironment(self):
+        return self.environment
+    def _GoogleMaps(self, data, lat=None,lon=None,zoom=None, width=None, height=None):
+        _vizId = str(uuid.uuid4().hex)
+        _dataId = "data_%s"%_vizId
+        _centerX = 0
+        _centerY = 0
+        _zoom = "undefined" if zoom is None else int(zoom)
+        _width = 400 if width is None else int(width)
+        _height = 300 if height is None else int(height)
+        _jData = """ %s = [];
+"""%_dataId
+        if lon is None or lat is None:
+            return ""
+        if data is None or len(data) == 0:
+            return ""
+        for row in data:
+            _jData += """ %s.push(new google.maps.LatLng(%s, %s));
+""" % (_dataId, row[lat]["value"], row[lon]["value"])
+            _centerX += float(row[lat]["value"])
+            _centerY += float(row[lon]["value"])
+        return """
+<div id="map_%s" style="height:%dpx;width:%dpx;"></div>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/js/filters/googlemaps.js"></script>
+<script type="text/javascript">
+(function(){
+%s
+var mapOptions = {
+    center: new google.maps.LatLng(%f, %f),
+    zoom: %s,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+};
+GoogleMap("map_%s", %s, mapOptions);
+})();
+</script>
+""" % (_vizId, _height, _width, _jData, (_centerX/len(data)), (_centerY/len(data)), _zoom, _vizId, _dataId)
+
+    def _ColumnChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
+        _vizId = str(uuid.uuid4().hex)
+        _prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
+        _dataId = "data_%s"%_vizId
+        _width = 400 if width is None else int(width)
+        _height = 300 if height is None else int(height)
+        _jData = """ %s = [];
+"""%_dataId
+        if x is None or y is None:
+            return ""
+        if data is None:
+            return ""
+        for row in data:
+            _jData += """ %s.push({%s: "%s", %s: %s});
+""" % (_dataId, x, row[x]["value"],  y, row[y]["value"])
+        myOptions = {}
+        myOptions["width"] = _width
+        myOptions["height"] = _height
+        myOptions["x"] = x
+        myOptions["y"] = y
+        if lowerBound is not None:
+            myOptions["lowerBound"] = lowerBound
+        if upperBound is not None:
+            myOptions["upperBound"] = upperBound
+        if leftBound is not None:
+            myOptions["leftBound"] = leftBound
+        if rightBound is not None:
+            myOptions["rightBound"] = rightBound
+        options = """options_%s = %s""" % (_vizId, json.dumps(myOptions))
+        return """<script src="/js/d3.v3.min.js"></script>
+<script src="%s/js/dimple.v2.0.0.min.js"></script>
+<script src="%s/js/filters/columnchart.js"></script>
+<div id="barchart_%s" style="height:%dpx;width:%dpx;"></div>
+<script type="text/javascript">
+(function(){
+    %s
+    %s
+    drawColumnChart("columnchart_%s", %s, options_%s);
+})();
+</script>""" % (_prefix, _prefix, _vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+
+    def _BarChart(self, data, x=None, y=None, width=None, height=None, lowerBound=None, leftBound=None, rightBound=None, upperBound=None, yLog=None):
+        _vizId = str(uuid.uuid4().hex)
+        _dataId = "data_%s"%_vizId
+        _width = 400 if width is None else int(width)
+        _height = 300 if height is None else int(height)
+        _prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
+        _jData = """ %s = [];
+"""%_dataId
+        if x is None or y is None:
+            return ""
+        if data is None:
+            return ""
+        for row in data:
+            _jData += """ %s.push({%s: "%s", %s: %s});
+""" % (_dataId, x, row[x]["value"],  y, row[y]["value"])
+        myOptions = {}
+        myOptions["width"] = _width
+        myOptions["height"] = _height
+        myOptions["x"] = x
+        myOptions["y"] = y
+        if lowerBound is not None:
+            myOptions["lowerBound"] = lowerBound
+        if upperBound is not None:
+            myOptions["upperBound"] = upperBound
+        if leftBound is not None:
+            myOptions["leftBound"] = leftBound
+        if rightBound is not None:
+            myOptions["rightBound"] = rightBound
+        options = """options_%s = %s""" % (_vizId, json.dumps(myOptions))
+        return """<script src="/js/d3.v3.min.js"></script>
+<script src="%s/js/dimple.v2.0.0.min.js"></script>
+<script src="%s/js/filters/barchart.js"></script>
+<div id="barchart_%s" style="height:%dpx;width:%dpx;"></div>
+<script type="text/javascript">
+(function(){
+    %s
+    %s
+    drawBarChart("barchart_%s", %s, options_%s);
+})();
+</script>""" % (_prefix, _prefix, _vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+

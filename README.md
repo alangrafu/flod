@@ -19,10 +19,9 @@ bash < <(curl -skL http://lodspeakr.org/flod)
 
 and follow the yellow brick road :-)
 
-# Disclaimer
+# Tutorial 
 
-Currently there is a barely usable version. Although the default components are not ready yet, you can create your own right away.
-
+There is a tutorial which is a flod application itself. When installing flod, it will ask you if you want to import a repository with components. If you indicate https://github.com/alangrafu/flod-tutorial-app, flod will install the tutorial as an application.
 
 # What has been implemented so far
 
@@ -33,10 +32,13 @@ Currently there is a barely usable version. Although the default components are 
 - [ ] Cache
 - [X] Equivalent of Type module
 - [X] Equivalent of Service module
+- [X] SPARQL UPDATE module
+- [X] User/permission module
 - [X] Content negotiation
-- [ ] SPARQL transformation
+- [ ] SPARQL transformation (UNLIKELY to happen)
 - [ ] Multiple namespaces
-- [ ] Visualization filters
+- [ ] Multiple applications (IN PROGRESS BUT NOT FUNCTIONAL YET)
+- [X] Visualization filters (IN PROGRESS)
 - [X] 404 when no data is available component
 
 # Bugs, comments suggestions
