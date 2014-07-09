@@ -1,0 +1,25 @@
+@prefix flod: <http://flod.info/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<file:///996e4e35d18511e3851f542696d57b35> a flod:User ;
+    flod:group <file:///admin> ;
+    flod:password "6e8a135aba85437dba98170cffafbd28c974dc2160cadd0b7f34341d" ;
+    flod:salt "84c948fb95904850a0b9d9100f72b787" ;
+    flod:username "admin" .
+
+<file:///anonymous> a flod:Group ;
+    flod:allowedPattern "/home",
+      "",  "/login" ;
+    flod:name "Anonymous" .
+
+<file:///clients> a flod:Group;
+    flod:allowedPattern "/home", "/facets", "/logout";
+    flod:name "Clients" .
+
+<file:///admin> a flod:Group ;
+    flod:allowedPattern "" ;
+    flod:name "Admin Group" .
+

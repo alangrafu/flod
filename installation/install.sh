@@ -143,6 +143,8 @@ echo "Loading FLOD requirements"
 $PIP -q install -r $REQ
 #rdflib-jsonld is not installable via normal pip command
 #$PIP install https://github.com/RDFLib/rdflib-jsonld/archive/master.zip
+echo "Copying users.ttl"
+cp installation/users.ttl .
 
 echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh
