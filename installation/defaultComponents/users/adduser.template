@@ -9,13 +9,15 @@
   			<div class="form-group">
   				<label for="">Username</label>
   				<input type="text" class="form-control" id="username" name="username" placeholder="Username">
-  			</div>
-
-  			<div class="form-group">
   				<label for="">Password</label>
   				<input type="password" class="form-control" id="password" name="password" placeholder="Password">
-  			</div>
-
+          <label for="inputGroups">Groups:</label><br/>
+            <select multiple name="groups" id="groups" class="" required="required">
+              {%for row in groups%}
+              <option value="{{row.g}}">{{row.name}}</option>
+              {%endfor%}              
+            </select>
+        </div>
   			<button type="submit" class="btn btn-primary">Submit</button>
   		</form>
   	</div>

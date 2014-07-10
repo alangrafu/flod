@@ -121,8 +121,9 @@ vocab:allowedPattern ?pattern .
 	def _createUser(self, req, createUserUrl):
 		MYNS = Namespace(self.settings["ns"]["origin"]) if self.settings["mirrored"] else Namespace(self.settings["ns"]["local"])
 		addHTML = env.get_template(self.basedir+"adduser.template")
+		groups = self._getGroups()
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": addHTML.render(session=session, flod=self.flod), "uri": createUserUrl}
+				return {"content": addHTML.render(session=session, flod=self.flod, groups=groups), "uri": createUserUrl}
 		if req["request"].method == "POST":
 			# if "username" not in session:
 			# return {"content": addHTML.render(session=session, creationError=True), "uri": createUserUrl}
@@ -134,18 +135,35 @@ vocab:allowedPattern ?pattern .
 				_password = hashlib.sha224(_salt + req["request"].form["password"]).hexdigest()
 				g.parse("users.ttl", format="turtle")
 				for s, p, o in g.triples((None, self.VOCAB.username, _usernameLiteral)):
-					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod), "uri": self._prefix+createUserUrl}
+					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod, groups=groups), "uri": self._prefix+createUserUrl}
 				g.add((MYNS[slugify(_username)], RDF["type"], self.VOCAB["User"]))
 				g.add((MYNS[slugify(_username)], self.VOCAB.username, _usernameLiteral))
 				g.add((MYNS[slugify(_username)], self.VOCAB.salt, Literal(_salt)))
 				g.add((MYNS[slugify(_username)], self.VOCAB.password, Literal(_password)))
+				mygroups = req["request"].form.getlist('groups')
+				for group in mygroups:
+					g.add((MYNS[slugify(_username)], self.VOCAB.group, URIRef(group)))
 				with open("users.ttl", "wb") as f:
 					f.write(g.serialize(format='turtle'))
 			except:
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
-			return {"content": addHTML.render(session=session, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
+			return {"content": addHTML.render(session=session, groups=groups, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
+
+	def _getGroups(self):
+		g = Graph()
+		qres = []
+		try:
+			g.parse("users.ttl", format="turtle")
+			qres = g.query("""prefix vocab: <http://flod.info/>
+SELECT ?g ?name WHERE {
+?g a flod:Group;
+   flod:name ?name .
+}""" )
+		except Exception, e:
+			pass
+		return qres
 
 	def _editUser(self, req, editUserUrl):
 		self.VOCAB = Namespace("http://flod.info/")
