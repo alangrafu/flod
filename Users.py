@@ -16,7 +16,7 @@ env.loader = FileSystemLoader('.')
 
 
 class Users:
-	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser"}}
+	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser", "create_group": "creategroup", "delete_group": "deletegroup", "edit_group": "editgroup"}}
 	users = {}
 	groups = {}
 	defaultPermission = True  # True  forbids to continue
@@ -26,6 +26,8 @@ class Users:
 	logoutUrl = None
 	createUserUrl = None
 	editUserUrl = None
+	createGroupUrl = None
+	editGroupUrl = None
 	flod = None
 	_prefix = ""
 	basedir = "components/users/"
@@ -40,6 +42,8 @@ class Users:
 		self.logoutUrl = "/%s" % (self.settings["user_module"]["logout_url"])
 		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
 		self.editUserUrl = "/admin/%s" % (self.settings["user_module"]["edit_user"])
+		self.createGroupUrl = "/admin/%s" % (self.settings["user_module"]["create_group"])
+		self.editGroupUrl = "/admin/%s" % (self.settings["user_module"]["edit_group"])
 		self.sparql = SparqlEndpoint(settings)
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
@@ -68,9 +72,9 @@ vocab:allowedPattern ?pattern .
 		if "username" in session:
 			myGroups = session["groups"]
 		if self._groupPermission(myGroups, localUri):
-			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl:
+			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl or localUri == self.createGroupUrl or localUri == self.editGroupUrl:
 				return {"accepted": True, "url": r["localUri"], "permission": True}
-			return {"accepted": False, "url": r["localUri"], "permission": True}
+			return {"accepted": False, "url": localUri, "permission": True}
 		return {"accepted": True, "url": r["localUri"], "status": 406, "permission": False}
 
 	def _groupPermission(self, groups, url):
@@ -101,6 +105,7 @@ vocab:allowedPattern ?pattern .
 				session["salt"] = loadedResult["salt"]
 				session["username"] = _username
 				session["groups"] = loadedResult["groups"]
+				session["params"] = loadedResult["params"]
 				return {"content": loginHTML.render(session=session, flod=self.flod), "uri": req["url"]}
 			return {"content": loginHTML.render(session=session, loginError=True, flod=self.flod), "uri": req["url"]}
 		return {"content": "Invalid method", "status": 406}
@@ -149,6 +154,39 @@ vocab:allowedPattern ?pattern .
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
 			return {"content": addHTML.render(session=session, groups=groups, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
+		return {"content": "Redirecting", "uri": "/", "status": 303}
+
+	def _editGroup(self, req, createGroupUrl):
+		addHTML = env.get_template(self.basedir+"editgroup.template")
+		#groups = self._getGroups()
+		if req["request"].method == "GET" or req["request"].method == "HEAD":
+				return {"content": addHTML.render(session=session, flod=self.flod, groups=self.groups), "uri": createGroupUrl}
+		return {"content": "Redirecting", "uri": "/", "status": 303}
+
+	def _createGroup(self, req, createGroupUrl):
+		MYNS = Namespace(self.settings["ns"]["origin"]) if self.settings["mirrored"] else Namespace(self.settings["ns"]["local"])
+		addHTML = env.get_template(self.basedir+"addgroup.template")
+		groups = self._getGroups()
+		if req["request"].method == "GET" or req["request"].method == "HEAD":
+				return {"content": addHTML.render(session=session, flod=self.flod, groups=groups), "uri": createGroupUrl}
+		if req["request"].method == "POST":
+			g = Graph()
+			try:
+				_group = URIRef("/"+slugify(req["request"].form["group"]))
+				_myUris = req["request"].form["uris"].split("\r\n")
+				g.parse("users.ttl", format="turtle")
+				for s, p, o in g.triples((_group, RDF["type"], self.VOCAB["Group"])):
+					return {"content": addHTML.render(session=session, creationSuccess=False, flod=self.flod, groups=groups), "uri": self._prefix+createUserUrl}
+				g.add((_group, RDF["type"], self.VOCAB["Group"]))
+				g.add((_group, self.VOCAB["name"], Literal(req["request"].form["group"])))
+				for _u in _myUris:
+					g.add((_group, self.VOCAB["allowedPattern"], Literal(_u)))
+				with open("users.ttl", "wb") as f:
+					f.write(g.serialize(format='turtle'))
+			except:
+				print sys.exc_info()
+				return {"content": "Can't write on users.ttl", "status": 500}
+			return {"content": addHTML.render(session=session, groups=groups, creationSuccess=True, flod=self.flod), "uri": self._prefix+createGroupUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def _getGroups(self):
@@ -225,6 +263,13 @@ SELECT ?g ?name WHERE {
 			# Edit user
 			if localUri == self.editUserUrl and "username" in session:
 				return self._editUser(req, self.editUserUrl)
+			# Create group
+			if localUri == self.createGroupUrl:
+				return self._createGroup(req, self.createGroupUrl)
+			# Edit group
+			if localUri == self.editGroupUrl and "username" in session:
+				return self._editGroup(req, self.editGroupUrl)
+
 		forbidHTML = env.get_template(self.basedir+"forbidden.template")
 		return {"content": forbidHTML.render(session=session, creationSuccess=False, flod=self.flod), "url": req["url"], "status": 403}
 
@@ -252,7 +297,17 @@ SELECT ?groupName WHERE {
 }"""% (username))
 					for rrow in q:
 						_groups.append(str(rrow["groupName"]).lower())
-					return {"result": True, "uri": str(row["u"]), "salt": str(row["s"]), "groups": _groups}
+					#get extra parameters
+					_params = {}
+					q = g.query("""prefix vocab: <http://flod.info/>
+SELECT ?paramName ?paramValue WHERE {
+?u vocab:parameter [ vocab:parameterName ?paramName; vocab:parameterValue ?paramValue ];
+   vocab:username "%s".
+}"""% (username))
+					for rrow in q:
+						_params[str(rrow["paramName"])] = str(rrow["paramValue"])
+
+					return {"result": True, "uri": str(row["u"]), "salt": str(row["s"]), "groups": _groups, "params": _params}
 		except:
 			print "Error loading users RDF graph"
 			print sys.exc_info()
