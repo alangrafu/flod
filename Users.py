@@ -305,7 +305,10 @@ SELECT ?paramName ?paramValue WHERE {
    vocab:username "%s".
 }"""% (username))
 					for rrow in q:
-						_params[str(rrow["paramName"])] = str(rrow["paramValue"])
+						key = str(rrow["paramName"])
+						if key not in _params:
+							_params[key] = []
+						_params[key].append(str(rrow["paramValue"]))
 
 					return {"result": True, "uri": str(row["u"]), "salt": str(row["s"]), "groups": _groups, "params": _params}
 		except:
