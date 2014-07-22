@@ -14,7 +14,7 @@ Make LOD applications easy
 Similar to LODSPeaKr, just run
 
 ```
-bash < <(curl -skL http://lodspeakr.org/flod)
+bash < <(curl -skL http://flod.info/install)
 ```
 
 and follow the yellow brick road :-)
@@ -28,6 +28,8 @@ There is a tutorial which is a flod application itself. When installing flod, it
 - [X] Support for modules
 - [X] Use of templates
 - [X] Support mirroring
+- [X] Session variables
+- [X] Support for users and permissions
 - [ ] Multiple mirroring
 - [ ] Cache
 - [X] Equivalent of Type module
