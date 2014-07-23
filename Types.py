@@ -60,14 +60,27 @@ UNION
 {?s <%s> ?o}
 UNION
 {?s ?p <%s>}
-""" % (uri, uri, uri)
+UNION
+{GRAPH ?g {<%s> ?p ?o}}
+UNION
+{GRAPH ?g {?s <%s> ?o}}
+UNION
+{GRAPH ?g {?s ?p <%s>}}
+
+""" % (uri, uri, uri, uri, uri, uri)
 		if self.mime.getMime(extension) is not None:
 			extensionlessUri = ".".join(x)
 			typeQuery += """UNION{<%s> ?p2 ?o2}
 UNION
 {?s2 <%s> ?o2}
 UNION
-{?s2 ?p2 <%s>} """ % (extensionlessUri, extensionlessUri, extensionlessUri)
+{?s2 ?p2 <%s>} 
+UNION
+{GRAPH ?g{<%s> ?p2 ?o2}}
+UNION
+{GRAPH ?g{?s2 <%s> ?o2}}
+UNION
+{GRAPH ?g{?s2 ?p2 <%s>}} """ % (extensionlessUri, extensionlessUri, extensionlessUri, extensionlessUri, extensionlessUri, extensionlessUri)
 		typeQuery += """}
 LIMIT 1"""
 		(results, thisFirst) = self.sparql.query(typeQuery)
