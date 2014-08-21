@@ -6,7 +6,7 @@ REQ=$DIR/installation/requirements.txt
 COMPONENTS=components
 VE=`which virtualenv`
 SETTINGS="components/settings.json"
-PORT=5001
+PORT=54321
 APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
 GITREPO=""
 
@@ -25,7 +25,7 @@ function defaultSettings {
 			cd $COMPONENTS
 			$GIT init
 			cd ..
-			baseUrl="http://localhost:5001"
+			baseUrl="http://localhost:54321"
 			echo -n "(1/3) Whats your domain name? (default '$baseUrl'): "
 			read -u 1 aux_baseUrl
 			echo
