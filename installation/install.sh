@@ -4,6 +4,7 @@ GIT=$(which git)
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
 COMPONENTS=components
+TEMPLATES=templates
 VE=`which virtualenv`
 SETTINGS="components/settings.json"
 PORT=54321
@@ -22,6 +23,7 @@ fi
 function defaultSettings {
 	#Ask questions:
 			cp -r installation/defaultComponents $COMPONENTS
+			cp -r installation/defaultTemplates $TEMPLATES
 			cd $COMPONENTS
 			$GIT init
 			cd ..
@@ -121,7 +123,7 @@ fi
 
 #Create new virtualenv
 
-VE_DIR="flod_env_"$RANDOM
+VE_DIR="_flod_env_"$RANDOM
 
 echo "Creating virtualenv $VE_DIR..."
 $VE -q $VE_DIR

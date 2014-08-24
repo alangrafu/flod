@@ -1,0 +1,191 @@
+#!/bin/bash
+#
+VERSION=$(cat VERSION)
+TEMPLATES="templates"
+COMPONENTS="components"
+# https://github.com/alangrafu/lodspeakr/blob/master/utils/ldspk.sh
+USAGE="Usage:\n"
+USAGE=$USAGE"===COMPONENTS==\n"
+USAGE=$USAGE" Create component:\t\t\t\t\t$0 create service|type|jsonupdate foo\n"
+USAGE=$USAGE" List components:\t\t\t\t\t$0 list components\n"
+#USAGE=$USAGE"\n===DEBUG==\n"
+#USAGE=$USAGE" Turn debug:\t\t\t\t\t\t$0 debug on|off\n"
+#USAGE=$USAGE" Switch to standard view/models temporarily:\t\t$0 disable on|off\n"
+#USAGE=$USAGE" Clear cache:\t\t\t\t\t\t$0 cache clear\n"
+# USAGE=$USAGE"\n===BACKUP==\n"
+# USAGE=$USAGE" Backup current installation:\t\t\t\t$0 backup\n"
+# USAGE=$USAGE" Restore previous installation:\t\t\t\t$0 restore\n"
+# USAGE=$USAGE"\n===ENDPOINT MANAGEMENT==\n"
+# USAGE=$USAGE" Add endpoint:\t\t\t\t\t\t$0 add endpoint prefix http://example.com/sparql\n"
+# USAGE=$USAGE" Remove endpoint:\t\t\t\t\t$0 remove endpoint prefix \n"
+# USAGE=$USAGE" List endpoints:\t\t\t\t\t$0 list endpoints\n"
+# USAGE=$USAGE"\n===NAMESPACE MANAGEMENT==\n"
+# USAGE=$USAGE" Add namespace:\t\t\t\t\t\t$0 add namespace prefix http://example.com/sparql\n"
+# USAGE=$USAGE" Remove namespace:\t\t\t\t\t$0 remove namespace prefix \n"
+# USAGE=$USAGE" List namespaces:\t\t\t\t\t$0 list namespaces\n"
+#USAGE=$USAGE"\n===MODULES===\n"
+#USAGE=$USAGE" Enable module:\t\t\t\t\t\t$0 enable module position\n"
+#USAGE=$USAGE" Disable module:\t\t\t\t\t$0 disable module\n"
+#USAGE=$USAGE" List modules:\t\t\t\t\t\t$0 list modules\n"
+#USAGE=$USAGE"\n===VARIABLES===\n"
+#USAGE=$USAGE" Add any variable:\t\t\t\t\t$0 add variable value\n"
+#USAGE=$USAGE" Where variable has the form conf.something or lodspk.something\n"
+#USAGE=$USAGE" Remove any variable:\t\t\t\t\t$0 remove variable\n"
+#USAGE=$USAGE" If the variable is part of LODSPeaKr, it will return to its default value\n"
+# USAGE=$USAGE" \n===ADMIN USER===\n"
+# USAGE=$USAGE" Change password:\t\t\t\t\t$0 change password NEWPASSWORD\n"
+# USAGE=$USAGE" \n===UPDATE===\n"
+# USAGE=$USAGE" Update LODSPeaKr:\t\t\t\t\t$0 update\n"
+# USAGE=$USAGE" \n===SERVICE SCAFFOLDING===\n"
+# USAGE=$USAGE" Update LODSPeaKr:\t\t\t\t\t$0 scaffold SERVICE\n"
+USAGE=$USAGE"\n===VERSION==\n"
+USAGE=$USAGE" Version:\t\t\t\t\t\t$0 version\n"
+USAGEDEBUG="Usage: $0 debug on|off"
+if [[ $# -eq 0 || "$1" == "--help" ]]; then
+  echo -e $USAGE
+  exit 1
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+operations=( create list cache version )
+currentOperation=
+
+if [[ ${operations[@]} =~ $1 ]]; then
+  currentOperation=$1
+else
+  echo "Operation \"$1\" not valid"
+  echo -e $USAGE
+  exit 1
+fi
+
+## Create/delete
+if [[ $currentOperation == "create" ]]; then
+  modules=( type service jsonupdate )
+  currentModule=
+  currentFormat=
+  if [[ ${modules[@]} =~ $2 ]]; then
+    currentModule=$2
+    if [[ $3 != "" ]]; then
+      currentModuleDir=$COMPONENTS/$currentModule"s"
+      echo mkdir -p $currentModuleDir #Create dir just in case
+      echo cp -rf $TEMPLATES/$currentModule $currentModuleDir/$3
+      echo "$3 created successfully"
+    else
+      echo "Module \"$2\" not valid"
+      echo -e $USAGE
+      exit 1      
+    fi
+  else
+    echo "Module \"$2\" not valid"
+    echo -e $USAGE
+    exit 1
+  fi
+fi
+
+## Version
+if [[ $currentOperation == "version" ]]; then
+  echo "FLOD "$VERSION
+fi
+
+## List
+if [[ $currentOperation == "list" ]]; then
+  listOperation=( components ) #( endpoints modules components namespaces )
+  if [[ ${listOperation[@]} =~ $2 && $2 != "" ]]
+  then
+    listOperation=$2
+  else
+    echo -e "Option '$2' not supported. Operation aborted\n" >&2
+    echo -e $USAGE
+    exit 1
+  fi
+  if [[ $listOperation == "components" ]]
+  then
+    cd $DIR/$COMPONENTS
+    componentModules=`ls |grep -v "settings.json"|grep -v "includes"|grep -v "users"`
+    for i in $componentModules; do
+      echo $i
+      for j in `ls $i`; do
+        echo -e "\t"$j
+      done
+    done
+    echo
+  fi
+  exit
+fi
+
+
+## Details
+if [[ $currentOperation == "details" ]]; then
+  if [ "$#" != "3" ]; then
+    echo -e $USAGE
+    exit 1
+  fi
+  detailOperation=( type service uri )
+  if [[ ${detailOperation[@]} =~ $2 && $2 != "" ]]
+  then
+    detailOperation=$2
+  else
+    echo -e "Option '$2' not supported. Operation aborted\n" >&2
+    echo -e $USAGE
+    exit 1
+  fi
+  cd $DIR/..
+  $DIR/modules/detail-component.sh $detailOperation $3
+  exit
+fi
+
+## Change
+if [[ $currentOperation == "change" ]]; then
+  if [ "$#" != "3" ]; then
+    echo -e $USAGE
+    exit 1
+  fi
+  changeOperation=( password )
+  if [[ ${changeOperation[@]} =~ $2 && $2 != "" ]]
+  then
+    changeOperation=$2
+  else
+    echo -e "Option '$2' not supported. Operation aborted\n" >&2
+    echo -e $USAGE
+    exit 1
+  fi
+  if [[ $3 == "" ]]; then
+    echo "Error: No new password given"
+    echo -e $USAGE;
+    exit 1
+  fi
+  php $DIR/modules/change-password.php $3
+  exit
+fi
+
+## Update
+if [[ $currentOperation == "update" ]]; then
+  $DIR/modules/update-lodspeakr.sh
+  exit
+fi
+
+
+## Scaffold
+if [[ $currentOperation == "scaffold" ]]; then
+  if [ "$#" != "3" ]; then
+    echo -e $USAGE
+    exit 1
+  fi
+  scaffoldOperation=( service )
+  if [[ ${scaffoldOperation[@]} =~ $2 && $2 != "" ]]
+  then
+    scaffoldOperation=$2
+  else
+    echo -e "Option '$2' for scaffolding not supported. Operation aborted\n" >&2
+    echo -e $USAGE
+    exit 1
+  fi
+  if [[ $3 == "" ]]; then
+    echo "Error: No new component name given"
+    echo -e $USAGE;
+    exit 1
+  fi
+  $DIR/modules/create-scaffold.sh $scaffoldOperation $3
+  exit
+fi
+

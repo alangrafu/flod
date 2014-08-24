@@ -1,0 +1,38 @@
+{%extends "components/includes/base.html"%}
+{%block content%}
+<h1 class="text-center">{{uri}}</h1>
+<table class="table table-striped table-hover table-responsive">
+	<thead>
+		<tr>
+			<th>s</th>
+			<th>p</th>
+			<th>o</th>
+		</tr>
+	</thead>
+	<tbody>
+	{%for row in queries.out%}
+		<tr>
+			<td>{{uri}}</td>
+			<td>{{row.p.value}}</td>
+			<td>{{row.o.value}}</td>
+		</tr>
+	{%endfor%}
+	</tbody>
+	<thead>
+		<tr>
+			<th>s</th>
+			<th>p</th>
+			<th>o</th>
+		</tr>
+	</thead>
+	<tbody>
+	{%for row in queries.in%}
+		<tr>
+			<td>{{row.s.value}}</td>
+			<td>{{row.p.value}}</td>
+			<td>{{uri}}</td>
+		</tr>
+	{%endfor%}
+	</tbody>
+</table>
+{%endblock%}
