@@ -67,9 +67,9 @@ if [[ $currentOperation == "create" ]]; then
     currentModule=$2
     if [[ $3 != "" ]]; then
       currentModuleDir=$COMPONENTS/$currentModule"s"
-      echo mkdir -p $currentModuleDir #Create dir just in case
-      echo cp -rf $TEMPLATES/$currentModule $currentModuleDir/$3
-      echo "$3 created successfully"
+      mkdir -p $currentModuleDir #Create dir just in case
+      cp -rf $TEMPLATES/$currentModule $currentModuleDir/$3
+      echo "$currentModuleDir/$3 created successfully"
     else
       echo "Module \"$2\" not valid"
       echo -e $USAGE
