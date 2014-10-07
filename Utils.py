@@ -7,21 +7,17 @@ from jinja2 import Environment, PackageLoader, FileSystemLoader
 import uuid
 
 logging.basicConfig()
-class Singleton(object):
 
-    """Base singleton class."""
-
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        """Instantiation."""
-        if not isinstance(cls._instance, cls):
-            cls._instance = object.__new__(cls, *args, **kwargs)
-        return cls._instance
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 
-class SparqlEndpoint(Singleton):
-
+class SparqlEndpoint:
+    __metaclass__ = Singleton
     """Class in charge of managing the SPARQL Endpoints."""
 
     endpoints = {}
@@ -48,7 +44,7 @@ class SparqlEndpoint(Singleton):
         try:
             results = sparql.query().convert()
             if self.settings["mirrored"] is True:
-                for row in results["results"]["bindings"]:                    
+                for row in results["results"]["bindings"]:
                     for elem in results["head"]["vars"]:
                         if elem not in row:
                             row[elem] = {}
@@ -70,8 +66,8 @@ class SparqlEndpoint(Singleton):
 
 
 
-class Namespace(Singleton):
-
+class Namespace():
+    __metaclass__ = Singleton
     """Namespace management."""
 
     ns = {}
@@ -110,7 +106,8 @@ class Namespace(Singleton):
 
 
 
-class MimetypeSelector(Singleton):
+class MimetypeSelector():
+    __metaclass__ = Singleton
     mime2extension = {}
 
     def __init__(self):
@@ -133,7 +130,8 @@ class MimetypeSelector(Singleton):
                 return key
         return None
 
-class EnvironmentFactory(Singleton):
+class EnvironmentFactory():
+    __metaclass__ = Singleton
     environment = None
     def __init__(self, settings, app):
         self.environment = Environment()
@@ -141,6 +139,19 @@ class EnvironmentFactory(Singleton):
         self.environment.filters['GoogleMaps'] = self._GoogleMaps
         self.environment.filters['BarChart'] = self._BarChart
         self.environment.filters['ColumnChart'] = self._ColumnChart
+
+        ## Search for additional filters
+        # if "additionalFilters" in settings:
+        #     sys.path.append("./components/")
+        #     print settings["additionalFilters"], len(settings["additionalFilters"])
+        #     for f in settings["additionalFilters"]:
+        #         filterClass = f["class"]
+        #         print "Loading ",f, len(f["class"])
+                # c = __import__(filterClass)
+                # print c
+                # print c.hola();
+
+
         self.settings = settings
     def getEnvironment(self):
         return self.environment
