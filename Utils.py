@@ -141,15 +141,46 @@ class EnvironmentFactory():
         self.environment.filters['ColumnChart'] = self._ColumnChart
 
         ## Search for additional filters
-        # if "additionalFilters" in settings:
-        #     sys.path.append("./components/")
-        #     print settings["additionalFilters"], len(settings["additionalFilters"])
-        #     for f in settings["additionalFilters"]:
-        #         filterClass = f["class"]
-        #         print "Loading ",f, len(f["class"])
-                # c = __import__(filterClass)
-                # print c
-                # print c.hola();
+        # 1 - Create class in components/myClass.py
+        # class myClass:
+        #
+        #     def hola(self):
+        #         return "hola"
+        #
+        #     def chao(self, name=""):
+        #         return "chao "+name
+        #
+        # 2 - define in settings.json
+        #
+        # "additionalFilters": [
+        #                     {
+        #                         "class": "myClass",
+        #                         "filters": [
+        #                                         {"name": "hola", "method": "hola"},
+        #                                         {"name": "hola2", "method": "chao"}
+        #                         ]
+        #                     }
+        # ],
+        #
+        if "additionalFilters" in settings:
+            sys.path.append("./components/")
+            print settings["additionalFilters"], len(settings["additionalFilters"])
+            for f in settings["additionalFilters"]:
+                filterClass = f["class"]
+                print "Loading ",f["class"], "..."
+                m = reload(__import__(filterClass))
+                try:
+                    c = getattr(m, filterClass)
+                except AttributeError:
+                    print "Can't load class '%s' from module '%s'. Aborting" %(filterClass, filterClass)
+                    exit(1)
+                i = c()
+                try:
+                    for _filter in f["filters"]:
+                        self.environment.filters[_filter["name"]] = c.__dict__[_filter["method"]]
+                except:
+                    print "Can't load method '%s' as '%s'. Aborting." % (_filter["method"], _filter["name"])
+                    exit(2)
 
 
         self.settings = settings
