@@ -139,6 +139,7 @@ class EnvironmentFactory():
         self.environment.filters['GoogleMaps'] = self._GoogleMaps
         self.environment.filters['BarChart'] = self._BarChart
         self.environment.filters['ColumnChart'] = self._ColumnChart
+        self.environment.filters['json'] = self._jsonify
 
         ## Search for additional filters
         # 1 - Create class in components/myClass.py
@@ -163,16 +164,19 @@ class EnvironmentFactory():
         # ],
         #
         if "additionalFilters" in settings:
-            sys.path.append("./components/")
-            print settings["additionalFilters"], len(settings["additionalFilters"])
+            sys.path.append("./components/customFilters")
             for f in settings["additionalFilters"]:
                 filterClass = f["class"]
                 print "Loading ",f["class"], "..."
-                m = reload(__import__(filterClass))
+                try:
+                    m = reload(__import__(filterClass))
+                except ImportError:
+                    print "Can't load module '%s' . Aborting" %(filterClass)
+                    exit(1)
                 try:
                     c = getattr(m, filterClass)
                 except AttributeError:
-                    print "Can't load class '%s' from module '%s'. Aborting" %(filterClass, filterClass)
+                    print "Can't load method '%s' from class '%s'. Aborting" %(filterClass, filterClass)
                     exit(1)
                 i = c()
                 try:
@@ -303,4 +307,8 @@ GoogleMap("map_%s", %s, mapOptions);
     drawBarChart("barchart_%s", %s, options_%s);
 })();
 </script>""" % (_prefix, _prefix, _vizId, _height, _width, options, _jData, _vizId, _dataId, _vizId)
+
+    def _jsonify(self,data):
+        import json
+        return json.dumps(data)
 

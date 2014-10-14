@@ -6,7 +6,7 @@ import sys
 from functools import update_wrapper
 from datetime import timedelta
 from jinja2 import FileSystemLoader
-from jinja2.environment import Environment
+from Utils import EnvironmentFactory
 
 # env = Environment()
 # env.loader = FileSystemLoader('.')
@@ -64,6 +64,11 @@ try:
 except Exception, e:
 	printerr("ERROR: Can't load components/settings.json")
 	exit(1)
+
+
+# Create environment
+e = EnvironmentFactory(settings, app)
+env = e.getEnvironment()
 
 # Load modules
 modules = []
