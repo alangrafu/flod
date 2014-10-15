@@ -9,6 +9,7 @@ import sys
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
 from rdflib import ConjunctiveGraph, URIRef
+import requests
 env = Environment()
 env.loader = FileSystemLoader('.')
 
@@ -30,13 +31,19 @@ class JsonBasedWriter:
 		self.sparql = SparqlEndpoint(self.settings)
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 		self.graph = ConjunctiveGraph('SPARQLUpdateStore')
-		self.graph.open((self.settings["endpoints"]["local"], self.settings["sparqlUpdateEndpoint"]["local"]))
+		self.graph.open((self.settings["endpoints"]["local"], self.settings["sparqlUpdateEndpoint"]["local"]["url"]))
 
 	def _update(self, q):
 		graphuri = URIRef('urn:any')
 		try:
-			g = self.graph.get_context(graphuri)
-			g.update(q)
+#self.g = self.graph.get_context(graphuri)
+			auth = None
+			if "user" in self.settings["sparqlUpdateEndpoint"]["local"] and "pass" in self.settings["sparqlUpdateEndpoint"]["local"]:
+			        auth = HTTPDigestAuth(self.settings["sparqlUpdateEndpoint"]["local"]['user'], self.settings["sparqlUpdateEndpoint"]["local"]['pass'])
+			headers = {'content-type': 'application/sparql-update'}
+			r = requests.post(self.settings["sparqlUpdateEndpoint"]["local"]["url"], data=q, auth=auth, headers=headers)
+			if r.status_code > 299:
+			        return False
 		except:
 			print sys.exc_info()
 			return False
@@ -54,9 +61,14 @@ class JsonBasedWriter:
 	def execute(self, req):
 		"""Serves a URI, given that the test method returned True"""
 		file = req["url"].replace(self.settings["ns"]["local"], "", 1)
-		if req["request"].form is None:
+		myForm = req["request"].form
+		myJson = req["request"].get_json()
+		if myForm is None and myJson is None:
 			return {"content": "{\"success\": false}", "status": 500, "mimetype": "application/json"}
-		data = req["request"].form
+		if myJson is not None:
+			data = myJson
+		else:
+			data = myForm
 		currentDir = getcwd()
 		jsonService = self.basedir + file
 		uri = req["url"]
