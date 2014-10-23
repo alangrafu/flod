@@ -1,4 +1,4 @@
-"""Util classes."""
+"""Service classes."""
 
 from Utils import SparqlEndpoint, Namespace, MimetypeSelector, EnvironmentFactory
 from jinja2 import Template

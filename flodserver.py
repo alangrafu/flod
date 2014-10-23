@@ -73,6 +73,16 @@ env = e.getEnvironment()
 # Load modules
 modules = []
 
+# Load other paths where extra modules may exists
+# Add modules in settings.json like
+#  	"additionalModules": [ "components/customModules", "foo/bar" ],
+# Later, you can add any module available in those dirs in "modules" setting
+#
+
+if "additionalModules" in settings:
+	for directory in settings["additionalModules"]:
+		sys.path.append(directory)
+
 for mod in settings["modules"]:
 	try:
 		m = reload(__import__(mod))
