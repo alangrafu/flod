@@ -4,6 +4,7 @@ GIT=$(which git)
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
 COMPONENTS=components
+ADDREQ=$COMPONENTS/requirements.txt
 TEMPLATES=templates
 VE=`which virtualenv`
 SETTINGS="components/settings.json"
@@ -111,6 +112,10 @@ else
 		read -u 1 GITREPO
 		if [ "$GITREPO" != "" ]; then
 			$GIT clone $GITREPO $COMPONENTS
+			if [ -e "$ADDREQ" ]; then
+				echo "Installing additional requirements
+				$PIP -q install -r $ADDREQ
+			fi
                 else
  			echo "Creating a brand new repository with default components"
 			defaultSettings
