@@ -133,15 +133,15 @@ if [ -e "$COMPONENTS" ]; then
 	echo "WARNING! Components folder already exist. Installation WILL NOT OVERRIDE IT"
 else
 	echo "Copying default components"
-	if [ $GIT == "" ]; then
+	if [ "$GIT" == "" ]; then
 		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
 		defaultSettings
 	else
-		if [ $GITREPO == "" ]; then
+		if [ "$GITREPO" == "" ]; then
 	                echo "--------------------------------"
         	        echo "For a tutorial application, use this URL"
                 	echo ""
- 	               echo https://github.com/alangrafu/flod-tutorial-app
+ 	                echo https://github.com/alangrafu/flod-tutorial-app
         	        echo ""
                 	echo "--------------------------------"
 			echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
