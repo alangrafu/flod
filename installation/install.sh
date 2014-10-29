@@ -30,7 +30,7 @@ for argument in $options
 		  echo "Predefined repo $GITREPO";;
     esac
 done
-
+exit 0
 #Create new virtualenv
 
 VE_DIR="_flod_env_"$RANDOM
