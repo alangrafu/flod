@@ -11,6 +11,7 @@ SETTINGS="components/settings.json"
 PORT=54321
 APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
 GITREPO=""
+PIP=`which pip`
 
 #Detecting neede tools
 
@@ -136,7 +137,6 @@ source $VE_DIR/bin/activate
 
 
 
-PIP=`which pip`
 
 if [ -z "$PIP" ]; then
 	echo "You need pip installed. Run"
