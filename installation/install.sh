@@ -11,7 +11,27 @@ SETTINGS="components/settings.json"
 PORT=54321
 APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
 GITREPO=""
+
+#Create new virtualenv
+
+VE_DIR="_flod_env_"$RANDOM
+
+echo "Creating virtualenv $VE_DIR..."
+$VE -q $VE_DIR
+source $VE_DIR/bin/activate
+
+
 PIP=`which pip`
+if [ -z "$PIP" ]; then
+	echo "You need pip installed. Run"
+	echo "  sudo easy_install -U pip"
+	echo "and then execute installation/install.sh again"
+	deactivate
+	exit 1
+fi
+
+
+
 
 #Detecting neede tools
 
@@ -114,7 +134,7 @@ else
 		if [ "$GITREPO" != "" ]; then
 			$GIT clone $GITREPO $COMPONENTS
 			if [ -e "$ADDREQ" ]; then
-				echo "Installing additional requirements"
+				echo "Installing custom requirements"
 				$PIP -q install -r $ADDREQ
 			fi
                 else
@@ -126,25 +146,6 @@ else
 fi
 
 
-
-#Create new virtualenv
-
-VE_DIR="_flod_env_"$RANDOM
-
-echo "Creating virtualenv $VE_DIR..."
-$VE -q $VE_DIR
-source $VE_DIR/bin/activate
-
-
-
-
-if [ -z "$PIP" ]; then
-	echo "You need pip installed. Run"
-	echo "  sudo easy_install -U pip"
-	echo "and then execute installation/install.sh again"
-	deactivate
-	exit 1
-fi
 
 echo "Loading FLOD requirements"
 $PIP -q install -r $REQ
