@@ -26,11 +26,9 @@ for argument in $options
     case $argument in
       repo-url=*) val=${argument#*=};
                   opt=${argument%=$val};
-                  GITREPO="${val}" ;
-		  echo "Predefined repo $GITREPO";;
+                  GITREPO="${val}" ;;
     esac
 done
-exit 0
 #Create new virtualenv
 
 VE_DIR="_flod_env_"$RANDOM
