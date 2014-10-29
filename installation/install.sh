@@ -22,7 +22,8 @@ for argument in $options
     case $argument in
       repo-url=*) val=${argument#*=};
                   opt=${argument%=$val};
-                  GITREPO="base-url=${val}" ;;
+                  GITREPO="${val}" ;
+		  echo "Predefined repo $GITREPO";;
     esac
 done
 
