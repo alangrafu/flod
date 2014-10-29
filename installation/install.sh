@@ -1,5 +1,7 @@
 #!/bin/bash
 
+options=$@
+
 GIT=$(which git)
 DIR=`pwd`
 REQ=$DIR/installation/requirements.txt
