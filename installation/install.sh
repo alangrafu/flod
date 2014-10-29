@@ -1,6 +1,8 @@
 #!/bin/bash
 
 options=$@
+index=0
+arguments=($options)
 
 GIT=$(which git)
 DIR=`pwd`
