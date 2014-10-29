@@ -113,7 +113,7 @@ else
 		if [ "$GITREPO" != "" ]; then
 			$GIT clone $GITREPO $COMPONENTS
 			if [ -e "$ADDREQ" ]; then
-				echo "Installing additional requirements
+				echo "Installing additional requirements"
 				$PIP -q install -r $ADDREQ
 			fi
                 else
