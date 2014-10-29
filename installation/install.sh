@@ -12,6 +12,20 @@ PORT=54321
 APPSECRET=$RANDOM$RANDOM$RANDOM$RANDOM
 GITREPO=""
 
+
+for argument in $options
+  do
+    # Incrementing index
+    index=`expr $index + 1`
+
+    # The conditions
+    case $argument in
+      repo-url=*) val=${argument#*=};
+                  opt=${argument%=$val};
+                  GITREPO="base-url=${val}" ;;
+    esac
+done
+
 #Create new virtualenv
 
 VE_DIR="_flod_env_"$RANDOM
@@ -123,14 +137,16 @@ else
 		echo "WARNING! Git not installed. Will copy default components without creating a git repository"
 		defaultSettings
 	else
-                echo "--------------------------------"
-                echo "For a tutorial application, use this URL"
-                echo ""
-                echo https://github.com/alangrafu/flod-tutorial-app
-                echo ""
-                echo "--------------------------------"
-		echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
-		read -u 1 GITREPO
+		if [ $GITREPO == "" ]; then
+	                echo "--------------------------------"
+        	        echo "For a tutorial application, use this URL"
+                	echo ""
+ 	               echo https://github.com/alangrafu/flod-tutorial-app
+        	        echo ""
+                	echo "--------------------------------"
+			echo -n "Do you want to use an existing repository as a default component folder? Add URL if yes, empty otherwise: "
+			read -u 1 GITREPO
+		fi
 		if [ "$GITREPO" != "" ]; then
 			$GIT clone $GITREPO $COMPONENTS
 			if [ -e "$ADDREQ" ]; then
