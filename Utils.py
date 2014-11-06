@@ -54,6 +54,7 @@ class SparqlEndpoint:
                             row[elem]["curie"] = None
                         if row[elem]["type"] == "uri":
                             row[elem]["value"] = row[elem]["value"].replace(self.settings['ns']['origin'], self.settings['ns']['local'], 1)
+                            row[elem]["mirroredUri"] = row[elem]["value"]
                         row[elem]["curie"] = ns.uri2curie(row[elem]["value"])
                     if isFirst:
                         first = row
