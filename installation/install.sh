@@ -176,7 +176,7 @@ cp installation/users.ttl .
 echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh
 echo "source $VE_DIR/bin/activate" >> start.sh
-echo "python flodserver.py" >> start.sh
+echo "python flodserver.py \$1" >> start.sh
 echo "deactivate" >> start.sh
 
 deactivate
