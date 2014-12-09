@@ -9,6 +9,7 @@ isodate==0.5.0
 itsdangerous==0.23
 pyparsing==2.0.1
 rdflib==4.1.1
+requests==2.4.3
 six==1.6.1
 slugify==0.0.1
 wsgiref==0.1.2
