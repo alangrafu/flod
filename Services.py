@@ -76,7 +76,7 @@ WHERE {
 					if not filename.endswith(".query"):
 						continue
 					sparqlQuery = self.env.get_template("%s/%s" % (root, filename))
-					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath, params=req["request"].args), currentEndpoint)
 					_name = filename.replace(".query", "")
 					queries[_name] = []
 					first[_name] = {}
