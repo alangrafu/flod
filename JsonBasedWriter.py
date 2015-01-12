@@ -101,7 +101,7 @@ class JsonBasedWriter:
 			for updatefile in updatefiles:
 				query = env.get_template(join(updatePath, updatefile))
 				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod, data=data)
-				if not self._update(out):
+				if not self._update(out.encode("utf-8")):
 					raise Exception
 		except Exception:
 			print sys.exc_info()

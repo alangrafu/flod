@@ -76,7 +76,7 @@ WHERE {
 					if not filename.endswith(".query"):
 						continue
 					sparqlQuery = self.env.get_template("%s/%s" % (root, filename))
-					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath), currentEndpoint)
+					(results, thisFirst) = self.sparql.query(sparqlQuery.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath, params=req["request"].args), currentEndpoint)
 					_name = filename.replace(".query", "")
 					queries[_name] = []
 					first[_name] = {}
@@ -97,7 +97,7 @@ WHERE {
 				out = json.dumps(queries)
 			else:
 				content = self.env.get_template("%s%s.template" % (templatePath, templateName))
-				out = content.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath)
+				out = content.render(queries=queries, first=first, uri=uri, session=session, flod=self.flod, args=myPath, params=req["request"].args)
 		except Exception:
 			print sys.exc_info()
 			return {"content": "Rendering problems", "status": 500}

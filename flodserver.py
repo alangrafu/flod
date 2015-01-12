@@ -57,12 +57,16 @@ def crossdomain(origin=None, methods=None, headers=None,
 def printerr(msg):
 	sys.stderr.write(msg + "\n")
 
+settingsFile = "components/settings.json"
+if len(sys.argv) > 1:
+	settingsFile = sys.argv[1]
+	print "Using %s as settings file" %settingsFile
 # Load settings
 try:
-	settings_file = open("components/settings.json")
+	settings_file = open(settingsFile)
 	settings = json.load(settings_file)
 except Exception, e:
-	printerr("ERROR: Can't load components/settings.json")
+	printerr("ERROR: Can't load %s" % settingsFile)
 	exit(1)
 
 
@@ -151,4 +155,4 @@ def catch_all(path):
 
 if __name__ == "__main__":
 	app.secret_key = settings["secret"]
-	app.run(host=settings["host"], port=settings["port"], debug=settings["debug"] if "debug" in settings else False)
+	app.run(host=settings["host"], threaded= True, port=settings["port"], debug=settings["debug"] if "debug" in settings else False)
