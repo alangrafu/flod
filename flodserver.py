@@ -75,6 +75,8 @@ e = EnvironmentFactory(settings, app)
 env = e.getEnvironment()
 
 # Load modules
+app.config['SESSION_TYPE'] = 'memcached'
+app.config['SECRET_KEY'] = settings["secret"];
 modules = []
 
 # Load other paths where extra modules may exists
