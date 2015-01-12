@@ -12,4 +12,5 @@ rdflib==4.1.1
 requests==2.4.3
 six==1.6.1
 slugify==0.0.1
+uWSGI==2.0.9
 wsgiref==0.1.2
