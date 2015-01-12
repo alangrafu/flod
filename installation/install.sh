@@ -179,7 +179,7 @@ echo "source $VE_DIR/bin/activate" >> start.sh
 echo "HOST=\$(cat components/settings.json |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"host\"]')" >> start.sh
 echo "PORT=\$(cat components/settings.json |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"port\"]')" >> start.sh
 echo "echo Launching FLOD on \$HOST:\$PORT >&2" >> start.sh
-echo "uwsgi --http \$HOST:\$PORT -wflodserver:app --master --workers=2 --threads=10" >> start.sh
+echo "uwsgi --http \$HOST:\$PORT -wflodserver:app --master --workers=2 --threads=10 --pidfile .pid" >> start.sh
 echo "deactivate" >> start.sh
 
 deactivate
