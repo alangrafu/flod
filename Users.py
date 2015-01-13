@@ -26,6 +26,7 @@ class Users:
 	logoutUrl = None
 	createUserUrl = None
 	editUserUrl = None
+	deleteUserUrl = None
 	createGroupUrl = None
 	editGroupUrl = None
 	flod = None
@@ -42,6 +43,7 @@ class Users:
 		self.logoutUrl = "/%s" % (self.settings["user_module"]["logout_url"])
 		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
 		self.editUserUrl = "/admin/%s" % (self.settings["user_module"]["edit_user"])
+		self.deleteUserUrl = "/admin/%s" % (self.settings["user_module"]["delete_user"])
 		self.createGroupUrl = "/admin/%s" % (self.settings["user_module"]["create_group"])
 		self.editGroupUrl = "/admin/%s" % (self.settings["user_module"]["edit_group"])
 		self.sparql = SparqlEndpoint(settings)
@@ -73,7 +75,7 @@ ORDER BY ?groupName""")
 		if "username" in session:
 			myGroups = session["groups"]
 		if self._groupPermission(myGroups, localUri):
-			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl or localUri == self.createGroupUrl or localUri == self.editGroupUrl:
+			if localUri == self.createUserUrl or localUri == self.loginUrl or localUri == self.logoutUrl or localUri == self.editUserUrl or localUri == self.deleteUserUrl or localUri == self.createGroupUrl or localUri == self.editGroupUrl:
 				return {"accepted": True, "url": r["localUri"], "permission": True}
 			return {"accepted": False, "url": localUri, "permission": True}
 		return {"accepted": True, "url": r["localUri"], "status": 406, "permission": False}
@@ -155,6 +157,48 @@ ORDER BY ?groupName""")
 				print sys.exc_info()
 				return {"content": "Can't write on users.ttl", "status": 500}
 			return {"content": addHTML.render(session=session, groups=groups, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
+		return {"content": "Redirecting", "uri": "/", "status": 303}
+
+	def _deleteUser(self, req, createUserUrl):
+		addHTML = env.get_template(self.basedir+"deleteuser.template")
+		g = Graph()
+		try:
+			g.parse("users.ttl", format="turtle")
+			usersrq = g.query("""prefix vocab: <http://flod.info/>
+SELECT ?u ?name WHERE {
+?u a flod:User;
+   flod:username ?name .
+} ORDER BY ?name""" )
+			users = []
+			for row in usersrq:
+				users.append({"u": str(row["u"]), "name": str(row["name"])})
+		except:
+			print sys.exc_info()
+			return {"content": "Can't read users.ttl", "status": 500}
+		if req["request"].method == "GET" or req["request"].method == "HEAD":
+			return {"content": addHTML.render(session=session, flod=self.flod, users=users), "uri": createUserUrl}
+		if req["request"].method == "POST":
+			g = Graph()
+			try:
+				g.parse("users.ttl", format="turtle")
+				_user = URIRef(req["request"].form["user"])
+				for s, p, o in g.triples((_user, None, None)):
+					g.remove((s, p, o))					
+				usersrq = g.query("""prefix vocab: <http://flod.info/>
+SELECT ?u ?name WHERE {
+?u a flod:User;
+   flod:username ?name .
+}ORDER BY ?name""" )
+				with open("users.ttl", "wb") as f:
+					f.write(g.serialize(format='turtle'))
+				users = []
+				for row in usersrq:
+					users.append({"u": str(row["u"]), "name": str(row["name"])})
+			except:
+				print sys.exc_info()
+				return {"content": "Can't write on users.ttl", "status": 500}
+				return {"content": addHTML.render(session=session, flod=self.flod, users=users), "uri": createUserUrl}
+			return {"content": addHTML.render(session=session, users=users, creationSuccess=True, flod=self.flod), "uri": self._prefix+createUserUrl}
 		return {"content": "Redirecting", "uri": "/", "status": 303}
 
 	def _editGroup(self, req, createGroupUrl):
@@ -264,6 +308,9 @@ SELECT ?g ?name WHERE {
 			# Edit user
 			if localUri == self.editUserUrl and "username" in session:
 				return self._editUser(req, self.editUserUrl)
+			# Delete user
+			if localUri == self.deleteUserUrl and "username" in session:
+				return self._deleteUser(req, self.deleteUserUrl)
 			# Create group
 			if localUri == self.createGroupUrl:
 				return self._createGroup(req, self.createGroupUrl)
