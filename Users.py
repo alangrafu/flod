@@ -56,7 +56,8 @@ SELECT ?g ?groupName ?pattern WHERE {
 ?g a vocab:Group;
 vocab:name ?groupName;
 vocab:allowedPattern ?pattern .
-}""")
+}
+ORDER BY ?groupName""")
 
 		for row in qres:
 			_groupName = str(row["groupName"]).lower()
