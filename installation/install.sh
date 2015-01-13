@@ -181,7 +181,9 @@ echo "PORT=\$(cat components/settings.json |python -c 'import json,sys;obj=json.
 echo "echo Launching FLOD on \$HOST:\$PORT >&2" >> start.sh
 echo "uwsgi --http \$HOST:\$PORT -wflodserver:app --master --workers=2 --threads=10 --pidfile .pid" >> start.sh
 echo "deactivate" >> start.sh
-
+TMP=settings_$RANDOM
+cat components/settings.json |python -c 'import json,sys,uuid;obj=json.load(sys.stdin);obj["secret"]=str(uuid.uuid4());print json.dumps(obj, indent=4)' > $TMP
+mv $TMP components/settings.json
 deactivate
 chmod +x start.sh
 
