@@ -176,10 +176,15 @@ cp installation/users.ttl .
 echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh
 echo "source $VE_DIR/bin/activate" >> start.sh
-echo "HOST=\$(cat components/settings.json |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"host\"]')" >> start.sh
-echo "PORT=\$(cat components/settings.json |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"port\"]')" >> start.sh
+echo "SETTINGS=\"components/settings.json\"" >> start.sh
+echo "if [ $# -gt 0 ]; then" >> start.sh
+echo "  SETTINGS=$1" >> start.sh
+echo "fi" >> start.sh
+echo "" >> start.sh
+echo "HOST=\$(cat \$SETTINGS |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"host\"]')" >> start.sh
+echo "PORT=\$(cat \$SETTINGS |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"port\"]')" >> start.sh
 echo "echo Launching FLOD on \$HOST:\$PORT >&2" >> start.sh
-echo "uwsgi --http \$HOST:\$PORT -wflodserver:app --master --workers=2 --threads=10 --pidfile .pid" >> start.sh
+echo "uwsgi --http \$HOST:\$PORT -wflodserver:app --master --workers=2 --threads=10 --pidfile .pid --pyargv \$SETTINGS" >> start.sh
 echo "deactivate" >> start.sh
 TMP=settings_$RANDOM
 cat components/settings.json |python -c 'import json,sys,uuid;obj=json.load(sys.stdin);obj["secret"]=str(uuid.uuid4());print json.dumps(obj, indent=4)' > $TMP
