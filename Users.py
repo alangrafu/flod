@@ -44,7 +44,7 @@ class Users:
 		self.createUserUrl = self.settings["rootPrefix"]+"admin/"+ self.settings["user_module"]["create_user"]
 		self.editUserUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_user"]
 		self.deleteUserUrl = self.settings["rootPrefix"]+"admin/"+self.settings["user_module"]["delete_user"]
-		self.createGroupUrl = self.settings["rootPrefix"]+"admin/"+ (self.settings["user_module"]["create_group"]
+		self.createGroupUrl = self.settings["rootPrefix"]+"admin/"+ self.settings["user_module"]["create_group"]
 		self.editGroupUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_group"]
 		self.sparql = SparqlEndpoint(settings)
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
