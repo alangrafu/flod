@@ -38,14 +38,14 @@ class Users:
 		"""Initializes class. Check if login and logout have been redefined."""
 		for k in settings:
 			self.settings[k] = settings[k]
-		self._prefix = "/"+self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
-		self.loginUrl = "/%s" % (self.settings["user_module"]["login_url"])
-		self.logoutUrl = "/%s" % (self.settings["user_module"]["logout_url"])
-		self.createUserUrl = "/admin/%s" % (self.settings["user_module"]["create_user"])
-		self.editUserUrl = "/admin/%s" % (self.settings["user_module"]["edit_user"])
-		self.deleteUserUrl = "/admin/%s" % (self.settings["user_module"]["delete_user"])
-		self.createGroupUrl = "/admin/%s" % (self.settings["user_module"]["create_group"])
-		self.editGroupUrl = "/admin/%s" % (self.settings["user_module"]["edit_group"])
+		self._prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
+		self.loginUrl = self.settings["rootPrefix"]+self.settings["user_module"]["login_url"]
+		self.logoutUrl = self.settings["rootPrefix"]+ self.settings["user_module"]["logout_url"]
+		self.createUserUrl = self.settings["rootPrefix"]+"admin/"+ self.settings["user_module"]["create_user"]
+		self.editUserUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_user"]
+		self.deleteUserUrl = self.settings["rootPrefix"]+"admin/"+self.settings["user_module"]["delete_user"]
+		self.createGroupUrl = self.settings["rootPrefix"]+"admin/"+ (self.settings["user_module"]["create_group"]
+		self.editGroupUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_group"]
 		self.sparql = SparqlEndpoint(settings)
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
