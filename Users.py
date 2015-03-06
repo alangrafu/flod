@@ -38,7 +38,6 @@ class Users:
 		"""Initializes class. Check if login and logout have been redefined."""
 		for k in settings:
 			self.settings[k] = settings[k]
-                print settings
 		self._prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
 		self.loginUrl = self.settings["rootPrefix"]+self.settings["user_module"]["login_url"]
 		self.logoutUrl = self.settings["rootPrefix"]+ self.settings["user_module"]["logout_url"]
