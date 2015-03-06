@@ -104,8 +104,10 @@ cachedDocuments = {}
 print modules
 if "rootPrefix" in settings:
 	settings["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
+	settings["flod"]["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
 else:
 	settings["rootPrefix"] = ""
+	settings["flod"]["rootPrefix"] = ""
 
 
 @app.route("/")
