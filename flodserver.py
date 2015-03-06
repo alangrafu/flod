@@ -89,6 +89,13 @@ if "additionalModules" in settings:
 	for directory in settings["additionalModules"]:
 		sys.path.append(directory)
 
+if "rootPrefix" in settings:
+	settings["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
+	settings["flod"]["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
+else:
+	settings["rootPrefix"] = ""
+	settings["flod"]["rootPrefix"] = ""
+
 for mod in settings["modules"]:
 	try:
 		m = reload(__import__(mod))
@@ -102,13 +109,6 @@ for mod in settings["modules"]:
 		app.logger.warning("No operations!")
 cachedDocuments = {}
 print modules
-if "rootPrefix" in settings:
-	settings["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
-	settings["flod"]["rootPrefix"] = settings["rootPrefix"].rstrip("/")+"/"
-else:
-	settings["rootPrefix"] = ""
-	settings["flod"]["rootPrefix"] = ""
-
 
 @app.route("/")
 @crossdomain(origin='*')
