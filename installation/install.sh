@@ -177,8 +177,8 @@ echo "Writing start.sh"
 echo "#!/bin/bash" > start.sh
 echo "source $VE_DIR/bin/activate" >> start.sh
 echo "SETTINGS=\"components/settings.json\"" >> start.sh
-echo "if [ $# -gt 0 ]; then" >> start.sh
-echo "  SETTINGS=$1" >> start.sh
+echo "if [ \$# -gt 0 ]; then" >> start.sh
+echo "  SETTINGS=\$1" >> start.sh
 echo "fi" >> start.sh
 echo "" >> start.sh
 echo "HOST=\$(cat \$SETTINGS |python -c 'import json,sys;obj=json.load(sys.stdin);print obj[\"host\"]')" >> start.sh
