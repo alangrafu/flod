@@ -30,7 +30,7 @@ class Users:
 	createGroupUrl = None
 	editGroupUrl = None
 	flod = None
-	_prefix = ""
+	_prefix = "/"
 	basedir = "components/users/"
 
 
@@ -38,14 +38,15 @@ class Users:
 		"""Initializes class. Check if login and logout have been redefined."""
 		for k in settings:
 			self.settings[k] = settings[k]
-		self._prefix = self.settings["rootPrefix"] if "rootPrefix" in self.settings else ""
-		self.loginUrl = self.settings["rootPrefix"]+self.settings["user_module"]["login_url"]
-		self.logoutUrl = self.settings["rootPrefix"]+ self.settings["user_module"]["logout_url"]
-		self.createUserUrl = self.settings["rootPrefix"]+"admin/"+ self.settings["user_module"]["create_user"]
-		self.editUserUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_user"]
-		self.deleteUserUrl = self.settings["rootPrefix"]+"admin/"+self.settings["user_module"]["delete_user"]
-		self.createGroupUrl = self.settings["rootPrefix"]+"admin/"+ self.settings["user_module"]["create_group"]
-		self.editGroupUrl = self.settings["rootPrefix"]+"admin/" + self.settings["user_module"]["edit_group"]
+		if "rootPrefix" in self.settings and self.settings["rootPrefix"] is not "":
+			self._prefix = self.settings["rootPrefix"] 
+		self.loginUrl = self._prefix+self.settings["user_module"]["login_url"]
+		self.logoutUrl = self._prefix+ self.settings["user_module"]["logout_url"]
+		self.createUserUrl = self._prefix+"admin/"+ self.settings["user_module"]["create_user"]
+		self.editUserUrl = self._prefix+"admin/" + self.settings["user_module"]["edit_user"]
+		self.deleteUserUrl = self._prefix+"admin/"+self.settings["user_module"]["delete_user"]
+		self.createGroupUrl = self._prefix+"admin/"+ self.settings["user_module"]["create_group"]
+		self.editGroupUrl = self._prefix+"admin/" + self.settings["user_module"]["edit_group"]
 		self.sparql = SparqlEndpoint(settings)
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 
@@ -94,14 +95,14 @@ ORDER BY ?groupName""")
 		loginHTML = env.get_template(self.basedir+"login.template")
 		if req["request"].method == "GET" or req["request"].method == "HEAD":
 			if "username" in session:
-				return {"content": loginHTML.render(session=session, uri=self._prefix+loginUrl, flod=self.flod), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, uri=self.loginUrl, flod=self.flod), "uri": self.loginUrl}
 			else:
-				return {"content": loginHTML.render(session=session, loginError=False, uri=self._prefix+loginUrl, flod=self.flod), "uri": loginUrl}
+				return {"content": loginHTML.render(session=session, loginError=False, uri=self.loginUrl, flod=self.flod), "uri": loginUrl}
 		if req["request"].method == "POST":
 			_username = req["request"].form["username"]
 			_password = req["request"].form["password"]
 			if "username" in session and _username == session["username"]:
-				return {"content": loginHTML.render(session=session, uri=self._prefix+loginUrl, flod=self.flod), "uri": req["url"]}
+				return {"content": loginHTML.render(session=session, uri=self.loginUrl, flod=self.flod), "uri": req["url"]}
 			loadedResult = self._load_user(_username, _password)
 			if loadedResult["result"]:
 				session["uri"] = loadedResult["uri"]
@@ -118,10 +119,10 @@ ORDER BY ?groupName""")
 		logoutHTML = env.get_template(self.basedir+"logout.template")
 		if "username" in session:
 			if req["request"].method == "GET" or req["request"].method == "HEAD":
-				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self._prefix+logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self.logoutUrl}
 			if req["request"].method == "POST":
 				session.clear()
-				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self._prefix+logoutUrl}
+				return {"content": logoutHTML.render(session=session, flod=self.flod), "uri": self.logoutUrl}
 		else:
 			return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
 		return {"content": "You are not logged in", "uri": logoutUrl, "status": 406}
