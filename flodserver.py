@@ -3,6 +3,7 @@ from flask import Flask, redirect, request, Response, make_response, current_app
 app = Flask(__name__)
 import json
 import sys
+import os
 from functools import update_wrapper
 from datetime import timedelta
 from jinja2 import FileSystemLoader
@@ -76,7 +77,7 @@ env = e.getEnvironment()
 
 # Load modules
 app.config['SESSION_TYPE'] = 'memcached'
-app.config['SECRET_KEY'] = settings["secret"];
+app.config['SECRET_KEY'] = os.urandom(127) #settings["secret"];
 modules = []
 
 # Load other paths where extra modules may exists
