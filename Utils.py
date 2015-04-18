@@ -29,6 +29,9 @@ class SparqlEndpoint:
         for k, e in self.settings["endpoints"].iteritems():
             self.endpoints[k] = SPARQLWrapper(e)
 
+    def addEndpoint(self, url, name):
+            self.endpoints[name] = SPARQLWrapper(url)
+
     def query(self, q, thisEndpoint="local"):
         """Query an endpoint."""
         ns = Namespace()
