@@ -13,6 +13,7 @@ import json
 class Services:
 	settings = {}
 	basedir = "components/services/"
+	configfilename = "config.json"
 	sparql = None
 	flod = None
 	env = None
@@ -57,8 +58,18 @@ WHERE {
 		service = self.basedir + file
 		uri = req["url"]
 		queryPath = "%s/queries/" % service
+		configFile = service+"/"+self.configfilename
+		config = {}
 		templatePath = "%s/" % service
 		templateName =  self.mime.getExtension(req["request"].accept_mimetypes.best)
+		try:
+			if isfile(configFile):
+				with open(configFile) as data_file:
+					config = json.load(data_file)
+			if "header" not in config:
+				config["header"] = {}
+		except:
+			print "Warning: Can't load %s" % configFile
 		try:
 			onlyfiles = [f for f in listdir(queryPath) if isfile(join(queryPath, f))]
 		except OSError:
@@ -83,7 +94,7 @@ WHERE {
 					if results is not None and "results" in results:
 						queries[_name] = results["results"]["bindings"]
 						first[_name] = thisFirst
-					else: 
+					else:
 						#Fail gracefully
 						queries[filename.replace(".query", "")] = []
 						first[_name] = {}
@@ -104,4 +115,4 @@ WHERE {
 		except Exception:
 			return {"content": "Can't find %s.template in %s" % (templateName, templatePath), "status": 500}
 			exit(3)
-		return {"content": out, "mimetype": "text/html"}
+		return {"content": out, "headers":config["header"]}

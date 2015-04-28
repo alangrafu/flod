@@ -36,7 +36,6 @@ class JsonBasedWriter:
 	def _update(self, q):
 		graphuri = URIRef('urn:any')
 		try:
-#self.g = self.graph.get_context(graphuri)
 			auth = None
 			if "user" in self.settings["sparqlUpdateEndpoint"]["local"] and "pass" in self.settings["sparqlUpdateEndpoint"]["local"]:
 			        auth = HTTPDigestAuth(self.settings["sparqlUpdateEndpoint"]["local"]['user'], self.settings["sparqlUpdateEndpoint"]["local"]['pass'])
@@ -69,6 +68,7 @@ class JsonBasedWriter:
 			data = myJson
 		else:
 			data = myForm
+
 		currentDir = getcwd()
 		jsonService = self.basedir + file
 		uri = req["url"]
@@ -101,6 +101,7 @@ class JsonBasedWriter:
 			for updatefile in updatefiles:
 				query = env.get_template(join(updatePath, updatefile))
 				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod, data=data)
+				print out
 				if not self._update(out.encode("utf-8")):
 					raise Exception
 		except Exception:

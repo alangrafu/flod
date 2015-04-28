@@ -147,16 +147,15 @@ def catch_all(path):
 				# cachedDocuments[response["url"]]["mime"] = mime
 				return redirect(response["url"], code=303)
 			c = module.execute(response)
-			if "mimetype" not in c:
+			if "mimetype" not in c and ("headers" not in c or "Content-Type" not in c["headers"]):
 				c["mimetype"] = "text/html"
 			status = c["status"] if "status" in c else 200
 			if status >= 300 and status < 400:
 				return redirect(c["uri"], code=status)
-			return Response(c["content"], mimetype=c["mimetype"]), status
+			return Response(c["content"], mimetype=c.get("mimetype", None), headers=c.get("headers", None)), status
 			break
 	notfoundHTML = env.get_template("notfound.template")
 	return notfoundHTML.render(uri=localUri, flod=settings["flod"]), 404
-
 
 if __name__ == "__main__":
 	app.secret_key = settings["secret"]

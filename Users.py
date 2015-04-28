@@ -16,7 +16,19 @@ env.loader = FileSystemLoader('.')
 
 
 class Users:
-	settings = {"user_module": {"login_url": "login", "logout_url": "logout", "create_user": "createuser", "delete_user": "deleteuser", "edit_user": "edituser", "create_group": "creategroup", "delete_group": "deletegroup", "edit_group": "editgroup"}}
+	settings = {"user_module": 
+				{
+					"login_url": "login", 
+					"logout_url": "logout", 
+					"create_user": "createuser", 
+					"delete_user": "deleteuser", 
+					"edit_user": "edituser", 
+					"create_group": "creategroup", 
+					"delete_group": "deletegroup", 
+					"edit_group": "editgroup"
+				},
+				"backend": "ttl"
+				}
 	users = {}
 	groups = {}
 	defaultPermission = True  # True  forbids to continue
