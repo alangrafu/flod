@@ -4,14 +4,11 @@ from jinja2 import Template
 from os import listdir, walk, chdir, getcwd
 from os.path import isfile, join, exists
 from flask import Response
-from Utils import Namespace, SparqlEndpoint
+from Utils import Namespace, SparqlEndpoint, EnvironmentFactory
 import sys
 from jinja2 import FileSystemLoader
-from jinja2.environment import Environment
 from rdflib import ConjunctiveGraph, URIRef
 import requests
-env = Environment()
-env.loader = FileSystemLoader('.')
 
 
 class JsonBasedWriter:
@@ -20,6 +17,7 @@ class JsonBasedWriter:
 	flod = None
 	basedir = "components/jsonupdates/"
 	g = None
+	env = None
 
 	def __init__(self, settings, app=None):
 		"""Initializes class"""
@@ -32,6 +30,8 @@ class JsonBasedWriter:
 		self.flod = self.settings["flod"] if "flod" in self.settings else None
 		self.graph = ConjunctiveGraph('SPARQLUpdateStore')
 		self.graph.open((self.settings["endpoints"]["local"], self.settings["sparqlUpdateEndpoint"]["local"]["url"]))
+		e = EnvironmentFactory(self.settings, app)
+		self.env = e.getEnvironment()
 
 	def _update(self, q):
 		graphuri = URIRef('urn:any')
@@ -87,7 +87,7 @@ class JsonBasedWriter:
 							currentEndpoint = "local"
 							if root.replace(queryPath, "", 1) != "":
 								currentEndpoint = root.split("/").pop()
-							sparqlQuery = env.get_template("%s/%s" % (root, filename))
+							sparqlQuery = self.env.get_template("%s/%s" % (root, filename))
 							results = self.sparql.query(sparqlQuery.render(uri=uri, session=session, flod=self.flod, data=data))
 							queries[filename.replace(".query", "")] = results["results"]["bindings"]
 						except Exception, ex:
@@ -99,7 +99,7 @@ class JsonBasedWriter:
 		try:
 			updatefiles = [f for f in listdir(updatePath) if isfile(join(updatePath, f)) and str(f).endswith(".update")]
 			for updatefile in updatefiles:
-				query = env.get_template(join(updatePath, updatefile))
+				query = self.env.get_template(join(updatePath, updatefile))
 				out = query.render(queries=queries, uri=uri, session=session, flod=self.flod, data=data)
 				print out
 				if not self._update(out.encode("utf-8")):
